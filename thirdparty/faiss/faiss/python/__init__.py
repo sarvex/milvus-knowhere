@@ -38,10 +38,10 @@ def replace_method(the_class, name, replacement, ignore_missing=False):
         if ignore_missing:
             return
         raise
-    if orig_method.__name__ == 'replacement_' + name:
+    if orig_method.__name__ == f'replacement_{name}':
         # replacement was done in parent class
         return
-    setattr(the_class, name + '_c', orig_method)
+    setattr(the_class, f'{name}_c', orig_method)
     setattr(the_class, name, replacement)
 
 def handle_Clustering():
@@ -884,20 +884,16 @@ def index_cpu_to_gpu_multiple_py(resources, index, co=None, gpus=None):
 
 
 def index_cpu_to_all_gpus(index, co=None, ngpu=-1):
-    index_gpu = index_cpu_to_gpus_list(index, co=co, gpus=None, ngpu=ngpu)
-    return index_gpu
+    return index_cpu_to_gpus_list(index, co=co, gpus=None, ngpu=ngpu)
 
 
 def index_cpu_to_gpus_list(index, co=None, gpus=None, ngpu=-1):
     """ Here we can pass list of GPU ids as a parameter or ngpu to
     use first n GPU's. gpus mut be a list or None"""
-    if (gpus is None) and (ngpu == -1):  # All blank
-        gpus = range(get_num_gpus())
-    elif (gpus is None) and (ngpu != -1):  # Get number of GPU's only
-        gpus = range(ngpu)
+    if gpus is None:
+        gpus = range(get_num_gpus()) if ngpu == -1 else range(ngpu)
     res = [StandardGpuResources() for _ in gpus]
-    index_gpu = index_cpu_to_gpu_multiple_py(res, index, co, gpus)
-    return index_gpu
+    return index_cpu_to_gpu_multiple_py(res, index, co, gpus)
 
 # allows numpy ndarray usage with bfKnn
 def knn_gpu(res, xq, xb, k, D=None, I=None, metric=METRIC_L2):
@@ -1123,12 +1119,13 @@ deprecated_name_map = {
 }
 
 for depr_prefix, base_prefix in deprecated_name_map.items():
-    _make_deprecated_swig_class(depr_prefix + "Vector", base_prefix + "Vector")
+    _make_deprecated_swig_class(f"{depr_prefix}Vector", f"{base_prefix}Vector")
 
     # same for the three legacy *VectorVector classes
     if depr_prefix in ['Float', 'Long', 'Byte']:
-        _make_deprecated_swig_class(depr_prefix + "VectorVector",
-                                    base_prefix + "VectorVector")
+        _make_deprecated_swig_class(
+            f"{depr_prefix}VectorVector", f"{base_prefix}VectorVector"
+        )
 
 # mapping from vector names in swigfaiss.swig and the numpy dtype names
 # TODO: once deprecated classes are removed, remove the dict and just use .lower() below
@@ -1168,9 +1165,9 @@ def copy_array_to_vector(a, v):
     classname = v.__class__.__name__
     assert classname.endswith('Vector')
     dtype = np.dtype(vector_name_map[classname[:-6]])
-    assert dtype == a.dtype, (
-        'cannot copy a %s array to a %s (should be %s)' % (
-            a.dtype, classname, dtype))
+    assert (
+        dtype == a.dtype
+    ), f'cannot copy a {a.dtype} array to a {classname} (should be {dtype})'
     v.resize(n)
     if n > 0:
         memcpy(v.data(), swig_ptr(a), a.nbytes)
@@ -1293,11 +1290,10 @@ def eval_intersection(I1, I2):
     n = I1.shape[0]
     assert I2.shape[0] == n
     k1, k2 = I1.shape[1], I2.shape[1]
-    ninter = 0
-    for i in range(n):
-        ninter += ranklist_intersection_size(
-            k1, swig_ptr(I1[i]), k2, swig_ptr(I2[i]))
-    return ninter
+    return sum(
+        ranklist_intersection_size(k1, swig_ptr(I1[i]), k2, swig_ptr(I2[i]))
+        for i in range(n)
+    )
 
 
 def normalize_L2(x):
@@ -1348,14 +1344,13 @@ def search_with_parameters(index, x, k, params=None, output_stats=False):
     )
     if not output_stats:
         return distances, labels
-    else:
-        stats = {
-            'ndis': nb_dis[0],
-            'pre_transform_ms': ms_per_stage[0],
-            'coarse_quantizer_ms': ms_per_stage[1],
-            'invlist_scan_ms': ms_per_stage[2],
-        }
-        return distances, labels, stats
+    stats = {
+        'ndis': nb_dis[0],
+        'pre_transform_ms': ms_per_stage[0],
+        'coarse_quantizer_ms': ms_per_stage[1],
+        'invlist_scan_ms': ms_per_stage[2],
+    }
+    return distances, labels, stats
 
 range_search_with_parameters_c = range_search_with_parameters
 
@@ -1382,14 +1377,13 @@ def range_search_with_parameters(index, x, radius, params=None, output_stats=Fal
     Iout = rev_swig_ptr(res.labels, nd).copy()
     if not output_stats:
         return lims, Dout, Iout
-    else:
-        stats = {
-            'ndis': nb_dis[0],
-            'pre_transform_ms': ms_per_stage[0],
-            'coarse_quantizer_ms': ms_per_stage[1],
-            'invlist_scan_ms': ms_per_stage[2],
-        }
-        return lims, Dout, Iout, stats
+    stats = {
+        'ndis': nb_dis[0],
+        'pre_transform_ms': ms_per_stage[0],
+        'coarse_quantizer_ms': ms_per_stage[1],
+        'invlist_scan_ms': ms_per_stage[2],
+    }
+    return lims, Dout, Iout, stats
 
 
 ######################################################
@@ -1506,7 +1500,7 @@ class Kmeans:
             self.cp = ClusteringParameters()
         for k, v in kwargs.items():
             if k == 'gpu':
-                if v == True or v == -1:
+                if v in [True, -1]:
                     v = get_num_gpus()
                 self.gpu = v
             else:
@@ -1551,10 +1545,7 @@ class Kmeans:
                 nc, d2 = init_centroids.shape
                 assert d2 == d
                 copy_array_to_vector(init_centroids.ravel(), clus.centroids)
-            if self.cp.spherical:
-                self.index = IndexFlatIP(d)
-            else:
-                self.index = IndexFlatL2(d)
+            self.index = IndexFlatIP(d) if self.cp.spherical else IndexFlatL2(d)
             if self.gpu:
                 self.index = index_cpu_to_all_gpus(self.index, ngpu=self.gpu)
             clus.train(x, self.index, weights)
@@ -1637,10 +1628,7 @@ class ResultHeap:
         self.I = np.zeros((nq, k), dtype='int64')
         self.D = np.zeros((nq, k), dtype='float32')
         self.nq, self.k = nq, k
-        if keep_max:
-            heaps = float_minheap_array_t()
-        else:
-            heaps = float_maxheap_array_t()
+        heaps = float_minheap_array_t() if keep_max else float_maxheap_array_t()
         heaps.k = k
         heaps.nh = nq
         heaps.val = swig_ptr(self.D)

@@ -11,7 +11,7 @@ workdir = "/checkpoint/matthijs/ondisk_distributed/"
 
 
 print('Load centroids')
-centroids = np.load(workdir + '1M_centroids.npy')
+centroids = np.load(f'{workdir}1M_centroids.npy')
 ncent, d = centroids.shape
 
 
@@ -44,9 +44,9 @@ def fvecs_mmap(fname):
 
 
 print('finish training index')
-xt = fvecs_mmap(deep1bdir + 'learn.fvecs')
+xt = fvecs_mmap(f'{deep1bdir}learn.fvecs')
 xt = np.ascontiguousarray(xt[:256 * 1000], dtype='float32')
 index.train(xt)
 
 print('write output')
-faiss.write_index(index, workdir + 'trained.faissindex')
+faiss.write_index(index, f'{workdir}trained.faissindex')

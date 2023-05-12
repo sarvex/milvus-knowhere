@@ -246,7 +246,7 @@ class TestSQFlavors(unittest.TestCase):
         gt_D, gt_I = gt_index.search(xq, 10)
         quantizer = faiss.IndexFlat(d, mt)
         for qname in '8bit 4bit 8bit_uniform 4bit_uniform fp16 6bit'.split():
-            qtype = getattr(faiss.ScalarQuantizer, 'QT_' + qname)
+            qtype = getattr(faiss.ScalarQuantizer, f'QT_{qname}')
             index = faiss.IndexIVFScalarQuantizer(
                 quantizer, d, nlist, qtype, mt)
             index.train(xt)
@@ -277,10 +277,7 @@ class TestSQFlavors(unittest.TestCase):
             for i in range(len(xq)):
                 l0, l1 = lims[i], lims[i + 1]
                 Inew = set(I3[l0:l1])
-                if mt == faiss.METRIC_INNER_PRODUCT:
-                    mask = D2[i] > radius
-                else:
-                    mask = D2[i] < radius
+                mask = D2[i] > radius if mt == faiss.METRIC_INNER_PRODUCT else D2[i] < radius
                 Iref = set(I2[i, mask])
                 ndiff += len(Inew ^ Iref)
                 ntot += len(Iref)
@@ -432,9 +429,10 @@ class TestNNDescent(unittest.TestCase):
                         recalls += 1
                         break
         recall = 1.0 * recalls / (nq * topk)
-        print('Metric: {}, L: {}, Recall@{}: {}'.format(
-            metric_names[metric], search_L, topk, recall))
-        assert recall > threshold, '{} <= {}'.format(recall, threshold)
+        print(
+            f'Metric: {metric_names[metric]}, L: {search_L}, Recall@{topk}: {recall}'
+        )
+        assert recall > threshold, f'{recall} <= {threshold}'
 
 
 class TestPQFlavors(unittest.TestCase):
@@ -518,10 +516,7 @@ class TestPQFlavors(unittest.TestCase):
             for i in range(len(xq)):
                 l0, l1 = lims[i], lims[i + 1]
                 Inew = set(I3[l0:l1])
-                if mt == faiss.METRIC_INNER_PRODUCT:
-                    mask = D2[i] > radius
-                else:
-                    mask = D2[i] < radius
+                mask = D2[i] > radius if mt == faiss.METRIC_INNER_PRODUCT else D2[i] < radius
                 Iref = set(I2[i, mask])
                 ndiff += len(Inew ^ Iref)
                 ntot += len(Iref)
@@ -611,8 +606,8 @@ class OPQRelativeAccuracy(unittest.TestCase):
         res = ev.launch('OPQ', index)
         e_opq = ev.evalres(res)
 
-        print('e_pq=%s' % e_pq)
-        print('e_opq=%s' % e_opq)
+        print(f'e_pq={e_pq}')
+        print(f'e_opq={e_opq}')
 
         # verify that OPQ better than PQ
         for r in 1, 10, 100:
@@ -736,10 +731,7 @@ class TestSpectralHash(unittest.TestCase):
                     index = faiss.IndexIVFSpectralHash(quantizer, d, nlist,
                                                        nbit, period)
                     index.nprobe = nprobe
-                    index.threshold_type = getattr(
-                        faiss.IndexIVFSpectralHash,
-                        'Thresh_' + tt
-                    )
+                    index.threshold_type = getattr(faiss.IndexIVFSpectralHash, f'Thresh_{tt}')
 
                     index.train(xt)
                     index.add(xb)
@@ -779,10 +771,7 @@ class TestRefine(unittest.TestCase):
         for i in range(len(xq)):
             x1 = xq[i]
             x2 = xb[I2[i, 5]]
-            if metric == faiss.METRIC_L2:
-                dref = ((x1 - x2) ** 2).sum()
-            else:
-                dref = np.dot(x1, x2)
+            dref = ((x1 - x2) ** 2).sum() if metric == faiss.METRIC_L2 else np.dot(x1, x2)
             np.testing.assert_almost_equal(dref, D2[i, 5], decimal=5)
 
         # check that with refinement, the recall@10 is the same as

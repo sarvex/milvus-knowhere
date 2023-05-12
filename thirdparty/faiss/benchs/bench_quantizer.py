@@ -59,12 +59,11 @@ elif len(todo) > 0 and "bigann1M" in todo[0]:
 else:
     ds = DatasetSIFT1M()
 
-if len(todo) > 0:
-    if "x" in todo[0]:
-        M, nbits = todo[0].split("x")
-        M = int(M)
-        nbits = int(nbits)
-        del todo[0]
+if len(todo) > 0 and "x" in todo[0]:
+    M, nbits = todo[0].split("x")
+    M = int(M)
+    nbits = int(nbits)
+    del todo[0]
 
 maxtrain = max(100 << nbits, 10**5)
 print(f"eval on {M}x{nbits} maxtrain={maxtrain}")

@@ -114,10 +114,9 @@ def compare_results(d1, i1, d2, i2):
         for x1, x2 in zip(inv1, inv2):
             assert(x1 == x2)
 
-    for _, (query1, query2) in enumerate(zip(valid1, valid2)):
+    for query1, query2 in zip(valid1, valid2):
         for idx1, order_d1 in query1.items():
-            order_d2 = query2.get(idx1, None)
-            if order_d2:
+            if order_d2 := query2.get(idx1, None):
                 idx_diff = order_d1[0] - order_d2[0]
 
                 if idx_diff not in idx_diffs:
@@ -133,14 +132,13 @@ def check_diffs(total_num, in_window_thresh, diffs, diff_inf, invalid):
     # We require a certain fraction of results to be within +/- diff_window
     # index differences
     diff_window = 4
-    in_window = 0
-
-    for diff in sorted(diffs):
-        if abs(diff) <= diff_window:
-            in_window += diffs[diff] / total_num
-
+    in_window = sum(
+        diffs[diff] / total_num
+        for diff in sorted(diffs)
+        if abs(diff) <= diff_window
+    )
     if (in_window < in_window_thresh):
-        print('error {} {}'.format(in_window, in_window_thresh))
+        print(f'error {in_window} {in_window_thresh}')
         assert(in_window >= in_window_thresh)
 
 def do_test_with_index(ci, gi, nprobe, k, clamp, in_window_thresh):

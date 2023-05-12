@@ -10,6 +10,7 @@ distance computations for the additional metrics. Call eg. with L1 to
 get L1 distance computations.
 """
 
+
 import faiss
 
 import sys
@@ -26,7 +27,7 @@ xb = faiss.randn((nb, d), 123)
 
 mt_name = "L2" if len(sys.argv) < 2 else sys.argv[1]
 
-mt = getattr(faiss, "METRIC_" + mt_name)
+mt = getattr(faiss, f"METRIC_{mt_name}")
 
 print("distances")
 t0 = time.time()

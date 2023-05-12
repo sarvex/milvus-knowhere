@@ -65,13 +65,15 @@ def main():
         group.add_argument(*args, **kwargs)
 
     group = parser.add_argument_group('index type')
-    aa('--inputindex',
-       default=workdir + 'trained.faissindex',
-       help='empty input index to fill in')
+    aa(
+        '--inputindex',
+        default=f'{workdir}trained.faissindex',
+        help='empty input index to fill in',
+    )
     aa('--nt', default=-1, type=int, help='nb of openmp threads to use')
 
     group = parser.add_argument_group('db options')
-    aa('--input', default=deep1bdir + "base.fvecs")
+    aa('--input', default=f"{deep1bdir}base.fvecs")
     aa('--bs', default=2**18, type=int,
        help='batch size for db access')
     aa('--i0', default=0, type=int, help='lower bound to index')

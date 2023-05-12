@@ -57,12 +57,7 @@ def run_bench(d, dsub, nbit=8, metric=None):
 # for have_threads in True, False:
 for have_threads in False, True:
 
-    if have_threads:
-        # good config for Intel(R) Xeon(R) CPU E5-2698 v4 @ 2.20GHz
-        nthread = 32
-    else:
-        nthread = 1
-
+    nthread = 32 if have_threads else 1
     faiss.omp_set_num_threads(nthread)
 
     for metric in faiss.METRIC_INNER_PRODUCT, faiss.METRIC_L2:

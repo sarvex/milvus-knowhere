@@ -39,8 +39,8 @@ if stage == 0:
     index = faiss.index_factory(xt.shape[1], "IVF4096,Flat")
     print("training index")
     index.train(xt)
-    print("write " + tmpdir + "trained.index")
-    faiss.write_index(index, tmpdir + "trained.index")
+    print(f"write {tmpdir}trained.index")
+    faiss.write_index(index, f"{tmpdir}trained.index")
 
 
 if 1 <= stage <= 4:
@@ -48,33 +48,32 @@ if 1 <= stage <= 4:
     bno = stage - 1
     xb = fvecs_read("sift1M/sift_base.fvecs")
     i0, i1 = int(bno * xb.shape[0] / 4), int((bno + 1) * xb.shape[0] / 4)
-    index = faiss.read_index(tmpdir + "trained.index")
+    index = faiss.read_index(f"{tmpdir}trained.index")
     print("adding vectors %d:%d" % (i0, i1))
     index.add_with_ids(xb[i0:i1], np.arange(i0, i1))
-    print("write " + tmpdir + "block_%d.index" % bno)
+    print(f"write {tmpdir}" + "block_%d.index" % bno)
     faiss.write_index(index, tmpdir + "block_%d.index" % bno)
 
 if stage == 5:
-
     print('loading trained index')
     # construct the output index
-    index = faiss.read_index(tmpdir + "trained.index")
+    index = faiss.read_index(f"{tmpdir}trained.index")
 
     block_fnames = [
         tmpdir + "block_%d.index" % bno
         for bno in range(4)
     ]
 
-    merge_ondisk(index, block_fnames, tmpdir + "merged_index.ivfdata")
+    merge_ondisk(index, block_fnames, f"{tmpdir}merged_index.ivfdata")
 
-    print("write " + tmpdir + "populated.index")
-    faiss.write_index(index, tmpdir + "populated.index")
+    print(f"write {tmpdir}populated.index")
+    faiss.write_index(index, f"{tmpdir}populated.index")
 
 
-if stage == 6:
+elif stage == 6:
     # perform a search from disk
-    print("read " + tmpdir + "populated.index")
-    index = faiss.read_index(tmpdir + "populated.index")
+    print(f"read {tmpdir}populated.index")
+    index = faiss.read_index(f"{tmpdir}populated.index")
     index.nprobe = 16
 
     # load query vectors and ground-truth

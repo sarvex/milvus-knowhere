@@ -44,7 +44,7 @@ print("Recall for the first batch:", np.mean(labels.reshape(-1) == np.arange(len
 
 # Serializing and deleting the index:
 index_path='first_half.bin'
-print("Saving index to '%s'" % index_path)
+print(f"Saving index to '{index_path}'")
 p.save_index(index_path)
 del p
 

@@ -123,10 +123,7 @@ def unwind_index_ivf(index):
         return index_ivf, vt
     if hasattr(faiss, "IndexRefine") and isinstance(index, faiss.IndexRefine):
         return unwind_index_ivf(faiss.downcast_index(index.base_index))
-    if isinstance(index, faiss.IndexIVF):
-        return index, None
-    else:
-        return None, None
+    return (index, None) if isinstance(index, faiss.IndexIVF) else (None, None)
 
 
 def apply_AQ_options(index, args):
@@ -303,11 +300,10 @@ else:
         print("storing", args.indexfile)
         faiss.write_index(index, args.indexfile)
 
-if args.no_precomputed_tables:
-    if isinstance(index_ivf, faiss.IndexIVFPQ):
-        print("disabling precomputed table")
-        index_ivf.use_precomputed_table = -1
-        index_ivf.precomputed_table.clear()
+if args.no_precomputed_tables and isinstance(index_ivf, faiss.IndexIVFPQ):
+    print("disabling precomputed table")
+    index_ivf.use_precomputed_table = -1
+    index_ivf.precomputed_table.clear()
 
 if args.indexfile:
     print("index size on disk: ", os.stat(args.indexfile).st_size)
@@ -413,7 +409,7 @@ if parametersets == ['autotune']:
     for kv in args.autotune_range:
         k, vals = kv.split(':')
         vals = np.fromstring(vals, sep=',')
-        print("setting %s to %s" % (k, vals))
+        print(f"setting {k} to {vals}")
         pr = ps.add_range(k)
         faiss.copy_array_to_vector(vals, pr.values)
 

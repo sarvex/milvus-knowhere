@@ -108,13 +108,13 @@ while args:
     elif not dbname:        dbname = a
     elif not index_key:     index_key = a
     else:
-        print("argument %s unknown" % a, file=sys.stderr)
+        print(f"argument {a} unknown", file=sys.stderr)
         sys.exit(1)
 
 cacheroot = '/tmp/bench_gpu_1bn'
 
 if not os.path.isdir(cacheroot):
-    print("%s does not exist, creating it" % cacheroot)
+    print(f"{cacheroot} does not exist, creating it")
     os.mkdir(cacheroot)
 
 #################################################################
@@ -180,13 +180,17 @@ def dataset_iterator(x, preproc, bs):
 
 def eval_intersection_measure(gt_I, I):
     """ measure intersection measure (used for knngraph)"""
-    inter = 0
     rank = I.shape[1]
     assert gt_I.shape[1] >= rank
-    for q in range(nq_gt):
-        inter += faiss.ranklist_intersection_size(
-            rank, faiss.swig_ptr(gt_I[q, :]),
-            rank, faiss.swig_ptr(I[q, :].astype('int64')))
+    inter = sum(
+        faiss.ranklist_intersection_size(
+            rank,
+            faiss.swig_ptr(gt_I[q, :]),
+            rank,
+            faiss.swig_ptr(I[q, :].astype('int64')),
+        )
+        for q in range(nq_gt)
+    )
     return inter / float(rank * nq_gt)
 
 
@@ -233,9 +237,9 @@ if knngraph:
     gt_I = None
 
 
-print("sizes: B %s Q %s T %s gt %s" % (
-    xb.shape, xq.shape, xt.shape,
-    gt_I.shape if gt_I is not None else None))
+print(
+    f"sizes: B {xb.shape} Q {xq.shape} T {xt.shape} gt {gt_I.shape if gt_I is not None else None}"
+)
 
 
 
@@ -253,7 +257,7 @@ pat = re.compile('(OPQ[0-9]+(_[0-9]+)?,|PCAR[0-9]+,)?' +
 
 matchobject = pat.match(index_key)
 
-assert matchobject, 'could not parse ' + index_key
+assert matchobject, f'could not parse {index_key}'
 
 mog = matchobject.groups()
 
@@ -266,23 +270,26 @@ ncent = int(ivf_str[3:])
 prefix = ''
 
 if knngraph:
-    gt_cachefile = '%s/BK_gt_%s.npy' % (cacheroot, dbname)
+    gt_cachefile = f'{cacheroot}/BK_gt_{dbname}.npy'
     prefix = 'BK_'
     # files must be kept distinct because the training set is not the
     # same for the knngraph
 
 if preproc_str:
-    preproc_cachefile = '%s/%spreproc_%s_%s.vectrans' % (
-        cacheroot, prefix, dbname, preproc_str[:-1])
+    preproc_cachefile = (
+        f'{cacheroot}/{prefix}preproc_{dbname}_{preproc_str[:-1]}.vectrans'
+    )
 else:
     preproc_cachefile = None
     preproc_str = ''
 
-cent_cachefile = '%s/%scent_%s_%s%s.npy' % (
-    cacheroot, prefix, dbname, preproc_str, ivf_str)
+cent_cachefile = (
+    f'{cacheroot}/{prefix}cent_{dbname}_{preproc_str}{ivf_str}.npy'
+)
 
-index_cachefile = '%s/%s%s_%s%s,%s.index' % (
-    cacheroot, prefix, dbname, preproc_str, ivf_str, pqflat_str)
+index_cachefile = (
+    f'{cacheroot}/{prefix}{dbname}_{preproc_str}{ivf_str},{pqflat_str}.index'
+)
 
 
 if not use_cache:
@@ -304,7 +311,7 @@ print("preparing resources for %d GPUs" % ngpu)
 
 gpu_resources = []
 
-for i in range(ngpu):
+for _ in range(ngpu):
     res = faiss.StandardGpuResources()
     if tempmem >= 0:
         res.setTempMemory(tempmem)

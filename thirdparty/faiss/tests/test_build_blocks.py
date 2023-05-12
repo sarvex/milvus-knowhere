@@ -495,7 +495,7 @@ class TestNNDescentKNNG(unittest.TestCase):
                         recalls += 1
                         break
         recall = 1.0 * recalls / (nb * K)
-        print('Metric: {}, knng accuracy: {}'.format(metric_names[metric], recall))
+        print(f'Metric: {metric_names[metric]}, knng accuracy: {recall}')
         assert recall > 0.99
 
 

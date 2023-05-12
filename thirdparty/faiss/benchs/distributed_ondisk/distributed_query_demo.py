@@ -54,8 +54,8 @@ def fvecs_read(fname):
 
 deep1bdir = "/datasets01_101/simsearch/041218/deep1b/"
 
-xq = fvecs_read(deep1bdir + "deep1B_queries.fvecs")
-gt_fname = deep1bdir + "deep1B_groundtruth.ivecs"
+xq = fvecs_read(f"{deep1bdir}deep1B_queries.fvecs")
+gt_fname = f"{deep1bdir}deep1B_groundtruth.ivecs"
 gt = ivecs_read(gt_fname)
 
 

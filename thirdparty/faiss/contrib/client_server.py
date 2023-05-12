@@ -53,9 +53,9 @@ class ClientIndex:
     def __init__(self, machine_ports: List[Tuple[str, int]], v6: bool = False):
         """ connect to a series of (host, port) pairs """
         self.sub_indexes = []
-        for machine, port in machine_ports:
-            self.sub_indexes.append(rpc.Client(machine, port, v6))
-
+        self.sub_indexes.extend(
+            rpc.Client(machine, port, v6) for machine, port in machine_ports
+        )
         self.ni = len(self.sub_indexes)
         # pool of threads. Each thread manages one sub-index.
         self.pool = ThreadPool(self.ni)

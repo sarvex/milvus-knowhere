@@ -42,7 +42,7 @@ parametersets = sys.argv[3:]
 tmpdir = '/tmp/bench_polysemous'
 
 if not os.path.isdir(tmpdir):
-    print("%s does not exist, creating it" % tmpdir)
+    print(f"{tmpdir} does not exist, creating it")
     os.mkdir(tmpdir)
 
 
@@ -78,8 +78,7 @@ else:
     sys.exit(1)
 
 
-print("sizes: B %s Q %s T %s gt %s" % (
-    xb.shape, xq.shape, xt.shape, gt.shape))
+print(f"sizes: B {xb.shape} Q {xq.shape} T {xt.shape} gt {gt.shape}")
 
 nq, d = xq.shape
 nb, d = xb.shape
@@ -108,8 +107,7 @@ def choose_train_size(index_key):
 
 
 def get_trained_index():
-    filename = "%s/%s_%s_trained.index" % (
-        tmpdir, dbname, index_key)
+    filename = f"{tmpdir}/{dbname}_{index_key}_trained.index"
 
     if not os.path.exists(filename):
         index = faiss.index_factory(d, index_key)
@@ -163,8 +161,7 @@ def matrix_slice_iterator(x, bs):
 
 def get_populated_index():
 
-    filename = "%s/%s_%s_populated.index" % (
-        tmpdir, dbname, index_key)
+    filename = f"{tmpdir}/{dbname}_{index_key}_populated.index"
 
     if not os.path.exists(filename):
         index = get_trained_index()
@@ -203,7 +200,7 @@ ivfpq_stats = faiss.cvar.indexIVFPQ_stats
 ivf_stats = faiss.cvar.indexIVF_stats
 
 
-if parametersets == ['autotune'] or parametersets == ['autotuneMT']:
+if parametersets in [['autotune'], ['autotuneMT']]:
 
     if parametersets == ['autotune']:
         faiss.omp_set_num_threads(1)

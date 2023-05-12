@@ -41,7 +41,7 @@ if __name__ == '__main__':
         try:
             index = faiss.read_index(fname, faiss.IO_FLAG_MMAP | faiss.IO_FLAG_READ_ONLY)
         except RuntimeError as e:
-            print('could not load %s: %s' % (fname, e))
+            print(f'could not load {fname}: {e}')
             return fname, None
 
         print("  %d entries" % index.ntotal)

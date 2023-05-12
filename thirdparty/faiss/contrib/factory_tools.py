@@ -17,59 +17,48 @@ def get_code_size(d, indexkey):
     if indexkey.endswith(",RFlat"):
         return d * 4 + get_code_size(d, indexkey[:-len(",RFlat")])
 
-    mo = re.match("IVF\\d+(_HNSW32)?,(.*)$", indexkey)
-    if mo:
-        return get_code_size(d, mo.group(2))
+    if mo := re.match("IVF\\d+(_HNSW32)?,(.*)$", indexkey):
+        return get_code_size(d, mo[2])
 
-    mo = re.match("IVF\\d+\\(.*\\)?,(.*)$", indexkey)
-    if mo:
-        return get_code_size(d, mo.group(1))
+    if mo := re.match("IVF\\d+\\(.*\\)?,(.*)$", indexkey):
+        return get_code_size(d, mo[1])
 
-    mo = re.match("IMI\\d+x2,(.*)$", indexkey)
-    if mo:
-        return get_code_size(d, mo.group(1))
+    if mo := re.match("IMI\\d+x2,(.*)$", indexkey):
+        return get_code_size(d, mo[1])
 
-    mo = re.match("(.*),Refine\\((.*)\\)$", indexkey)
-    if mo:
-        return get_code_size(d, mo.group(1)) + get_code_size(d, mo.group(2))
+    if mo := re.match("(.*),Refine\\((.*)\\)$", indexkey):
+        return get_code_size(d, mo[1]) + get_code_size(d, mo[2])
 
-    mo = re.match('PQ(\\d+)x(\\d+)(fs|fsr)?$', indexkey)
-    if mo:
-        return (int(mo.group(1)) * int(mo.group(2)) + 7) // 8
+    if mo := re.match('PQ(\\d+)x(\\d+)(fs|fsr)?$', indexkey):
+        return (int(mo[1]) * int(mo[2]) + 7) // 8
 
-    mo = re.match('PQ(\\d+)\\+(\\d+)$', indexkey)
-    if mo:
-        return (int(mo.group(1)) + int(mo.group(2)))
+    if mo := re.match('PQ(\\d+)\\+(\\d+)$', indexkey):
+        return int(mo[1]) + int(mo[2])
 
-    mo = re.match('PQ(\\d+)$', indexkey)
-    if mo:
-        return int(mo.group(1))
+    if mo := re.match('PQ(\\d+)$', indexkey):
+        return int(mo[1])
 
-    if indexkey == "HNSW32" or indexkey == "HNSW32,Flat":
+    if indexkey in ["HNSW32", "HNSW32,Flat"]:
         return d * 4 + 64 * 4 # roughly
 
-    if indexkey == 'SQ8':
-        return d
-    elif indexkey == 'SQ4':
+    if indexkey == 'SQ4':
         return (d + 1) // 2
     elif indexkey == 'SQ6':
         return (d * 6 + 7) // 8
+    elif indexkey == 'SQ8':
+        return d
     elif indexkey == 'SQfp16':
         return d * 2
 
-    mo = re.match('PCAR?(\\d+),(.*)$', indexkey)
-    if mo:
-        return get_code_size(int(mo.group(1)), mo.group(2))
-    mo = re.match('OPQ\\d+_(\\d+),(.*)$', indexkey)
-    if mo:
-        return get_code_size(int(mo.group(1)), mo.group(2))
-    mo = re.match('OPQ\\d+,(.*)$', indexkey)
-    if mo:
-        return get_code_size(d, mo.group(1))
-    mo = re.match('RR(\\d+),(.*)$', indexkey)
-    if mo:
-        return get_code_size(int(mo.group(1)), mo.group(2))
-    raise RuntimeError("cannot parse " + indexkey)
+    if mo := re.match('PCAR?(\\d+),(.*)$', indexkey):
+        return get_code_size(int(mo[1]), mo[2])
+    if mo := re.match('OPQ\\d+_(\\d+),(.*)$', indexkey):
+        return get_code_size(int(mo[1]), mo[2])
+    if mo := re.match('OPQ\\d+,(.*)$', indexkey):
+        return get_code_size(d, mo[1])
+    if mo := re.match('RR(\\d+),(.*)$', indexkey):
+        return get_code_size(int(mo[1]), mo[2])
+    raise RuntimeError(f"cannot parse {indexkey}")
 
 
 
@@ -93,8 +82,8 @@ def reverse_index_factory(index):
             prefix = "IVF%d(%s)" % (index.nlist, reverse_index_factory(quantizer))
 
         if isinstance(index, faiss.IndexIVFFlat):
-            return prefix + ",Flat"
+            return f"{prefix},Flat"
         if isinstance(index, faiss.IndexIVFScalarQuantizer):
-            return prefix + ",SQ8"
+            return f"{prefix},SQ8"
 
     raise NotImplementedError()

@@ -152,26 +152,26 @@ def load_data(dataset='deep1M', compute_gt=False):
     print("load data", dataset)
 
     if dataset == 'sift1M':
-        basedir = simdir + 'sift1M/'
+        basedir = f'{simdir}sift1M/'
 
-        xt = fvecs_read(basedir + "sift_learn.fvecs")
-        xb = fvecs_read(basedir + "sift_base.fvecs")
-        xq = fvecs_read(basedir + "sift_query.fvecs")
-        gt = ivecs_read(basedir + "sift_groundtruth.ivecs")
+        xt = fvecs_read(f"{basedir}sift_learn.fvecs")
+        xb = fvecs_read(f"{basedir}sift_base.fvecs")
+        xq = fvecs_read(f"{basedir}sift_query.fvecs")
+        gt = ivecs_read(f"{basedir}sift_groundtruth.ivecs")
 
     elif dataset.startswith('bigann'):
-        basedir = simdir + 'bigann/'
+        basedir = f'{simdir}bigann/'
 
         dbsize = 1000 if dataset == "bigann1B" else int(dataset[6:-1])
-        xb = bvecs_mmap(basedir + 'bigann_base.bvecs')
-        xq = bvecs_mmap(basedir + 'bigann_query.bvecs')
-        xt = bvecs_mmap(basedir + 'bigann_learn.bvecs')
+        xb = bvecs_mmap(f'{basedir}bigann_base.bvecs')
+        xq = bvecs_mmap(f'{basedir}bigann_query.bvecs')
+        xt = bvecs_mmap(f'{basedir}bigann_learn.bvecs')
         # trim xb to correct size
         xb = xb[:dbsize * 1000 * 1000]
         gt = ivecs_read(basedir + 'gnd/idx_%dM.ivecs' % dbsize)
 
     elif dataset.startswith("deep"):
-        basedir = simdir + 'deep1b/'
+        basedir = f'{simdir}deep1b/'
         szsuf = dataset[4:]
         if szsuf[-1] == 'M':
             dbsize = 10 ** 6 * int(szsuf[:-1])
@@ -180,15 +180,15 @@ def load_data(dataset='deep1M', compute_gt=False):
         elif szsuf[-1] == 'k':
             dbsize = 1000 * int(szsuf[:-1])
         else:
-            assert False, "did not recognize suffix " + szsuf
+            assert False, f"did not recognize suffix {szsuf}"
 
-        xt = fvecs_mmap(basedir + "learn.fvecs")
-        xb = fvecs_mmap(basedir + "base.fvecs")
-        xq = fvecs_read(basedir + "deep1B_queries.fvecs")
+        xt = fvecs_mmap(f"{basedir}learn.fvecs")
+        xb = fvecs_mmap(f"{basedir}base.fvecs")
+        xq = fvecs_read(f"{basedir}deep1B_queries.fvecs")
 
         xb = xb[:dbsize]
 
-        gt_fname = basedir + "%s_groundtruth.ivecs" % dataset
+        gt_fname = f"{basedir}{dataset}_groundtruth.ivecs"
         if compute_gt:
             gt = do_compute_gt(xb, xq, 100)
             print("store", gt_fname)
@@ -199,8 +199,7 @@ def load_data(dataset='deep1M', compute_gt=False):
     else:
         assert False
 
-    print("dataset %s sizes: B %s Q %s T %s" % (
-        dataset, xb.shape, xq.shape, xt.shape))
+    print(f"dataset {dataset} sizes: B {xb.shape} Q {xq.shape} T {xt.shape}")
 
     return xt, xb, xq, gt
 

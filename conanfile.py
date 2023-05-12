@@ -95,23 +95,18 @@ class KnowhereConan(ConanFile):
     def validate(self):
         if self.settings.compiler.get_safe("cppstd"):
             check_min_cppstd(self, self._minimum_cpp_standard)
-        min_version = self._minimum_compilers_version.get(str(self.settings.compiler))
-        if not min_version:
-            self.output.warn(
-                "{} recipe lacks information about the {} compiler support.".format(
-                    self.name, self.settings.compiler
-                )
-            )
-        else:
+        if min_version := self._minimum_compilers_version.get(
+            str(self.settings.compiler)
+        ):
             if Version(self.settings.compiler.version) < min_version:
                 raise ConanInvalidConfiguration(
-                    "{} requires C++{} support. The current compiler {} {} does not support it.".format(
-                        self.name,
-                        self._minimum_cpp_standard,
-                        self.settings.compiler,
-                        self.settings.compiler.version,
-                    )
+                    f"{self.name} requires C++{self._minimum_cpp_standard} support. The current compiler {self.settings.compiler} {self.settings.compiler.version} does not support it."
                 )
+
+        else:
+            self.output.warn(
+                f"{self.name} recipe lacks information about the {self.settings.compiler} compiler support."
+            )
 
     def layout(self):
         cmake_layout(self)
@@ -131,7 +126,7 @@ class KnowhereConan(ConanFile):
         cxx_std_value = (
             cxx_std_flag.split("=")[1]
             if cxx_std_flag
-            else "c++{}".format(self._minimum_cpp_standard)
+            else f"c++{self._minimum_cpp_standard}"
         )
         tc.variables["CXX_STD"] = cxx_std_value
         if is_msvc(self):

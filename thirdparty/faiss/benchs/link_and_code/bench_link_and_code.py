@@ -209,7 +209,7 @@ if args.beta_centroids:
             rfn.add_codes(i1 - i0, faiss.swig_ptr(xbatch))
         print()
 
-        print("storing %s" % args.neigh_recons_codes)
+        print(f"storing {args.neigh_recons_codes}")
         codes = faiss.vector_to_array(rfn.codes)
         np.save(args.neigh_recons_codes, codes)
 

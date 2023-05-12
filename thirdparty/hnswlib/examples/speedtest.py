@@ -24,7 +24,7 @@ index_path=f'speed_index{dim}.bin'
 # Declaring index
 p = hnswlib.Index(space='l2', dim=dim)  # possible options are l2, cosine or ip
 
-if not os.path.isfile(index_path) :
+if not os.path.isfile(index_path):
 
     p.init_index(max_elements=num_elements, ef_construction=100, M=16)
 
@@ -40,7 +40,7 @@ if not os.path.isfile(index_path) :
 
     # Serializing and deleting the index:
 
-    print("Saving index to '%s'" % index_path)
+    print(f"Saving index to '{index_path}'")
     p.save_index(index_path)
 p.set_num_threads(threads)
 times=[]
@@ -53,7 +53,7 @@ for _ in range(3):
         labels, distances = p.knn_query(data, k=1)
         tt=time.time()-t0
         times.append(tt)
-        print(f"{tt} seconds")    
+        print(f"{tt} seconds")
 str_out=f"mean time:{np.mean(times)}, median time:{np.median(times)}, std time {np.std(times)} {name}"
 print(str_out)
 with open (f"log_{dim}_t{threads}.txt","a") as f:

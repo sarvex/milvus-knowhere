@@ -204,7 +204,7 @@ class TestTorchUtilsCPU(unittest.TestCase):
         index_torch.add_with_ids(xb, ids)
 
         xb_up = torch.rand(10, d, dtype=torch.float32)
-        ids_up = ids[0:10]
+        ids_up = ids[:10]
 
         index_np.update_vectors(ids_up.numpy(), xb_up.numpy())
         index_torch.update_vectors(ids_up, xb_up)

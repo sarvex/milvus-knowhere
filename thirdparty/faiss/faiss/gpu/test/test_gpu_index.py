@@ -47,8 +47,7 @@ class EvalIVFPQAccuracy(unittest.TestCase):
         mat.apply_py(x)
 
     def do_cpu_to_gpu(self, index_key):
-        ts = []
-        ts.append(time.time())
+        ts = [time.time()]
         (xt, xb, xq) = self.get_dataset(small_one=True)
         nb, d = xb.shape
 
@@ -100,7 +99,7 @@ class EvalIVFPQAccuracy(unittest.TestCase):
         for shard in False, True:
 
             # test on just 2 GPUs
-            res = [faiss.StandardGpuResources() for i in range(2)]
+            res = [faiss.StandardGpuResources() for _ in range(2)]
             co = faiss.GpuMultipleClonerOptions()
             co.shard = shard
 
@@ -221,20 +220,20 @@ class TestInterleavedIVFPQLayout(unittest.TestCase):
     def test_copy_to_cpu(self):
         res = faiss.StandardGpuResources()
 
-        for bits_per_code in [4, 5, 6, 8]:
-            d = 128
-            nb = 10000
-            nq = 20
+        d = 128
+        nb = 10000
+        nq = 20
 
+        sub_q = 16
+        nprobe = 4
+
+        for bits_per_code in [4, 5, 6, 8]:
             rs = np.random.RandomState(234)
             xb = rs.rand(nb, d).astype('float32')
             xq = rs.rand(nq, d).astype('float32')
 
             nlist = int(math.sqrt(nb))
-            sub_q = 16
             bits_per_code = 8
-            nprobe = 4
-
             config = faiss.GpuIndexIVFPQConfig()
             config.interleavedLayout = True
             idx_gpu = faiss.GpuIndexIVFPQ(res, d, nlist, sub_q, bits_per_code, faiss.METRIC_L2, config)
@@ -265,20 +264,20 @@ class TestInterleavedIVFPQLayout(unittest.TestCase):
     def test_copy_to_gpu(self):
         res = faiss.StandardGpuResources()
 
-        for bits_per_code in [4, 5, 6, 8]:
-            d = 128
-            nb = 10000
-            nq = 20
+        d = 128
+        nb = 10000
+        nq = 20
 
+        sub_q = 16
+        nprobe = 4
+
+        for bits_per_code in [4, 5, 6, 8]:
             rs = np.random.RandomState(567)
             xb = rs.rand(nb, d).astype('float32')
             xq = rs.rand(nq, d).astype('float32')
 
             nlist = int(math.sqrt(nb))
-            sub_q = 16
             bits_per_code = 8
-            nprobe = 4
-
             config = faiss.GpuIndexIVFPQConfig()
             config.interleavedLayout = True
             idx_gpu = faiss.GpuIndexIVFPQ(res, d, nlist, sub_q, bits_per_code, faiss.METRIC_L2, config)

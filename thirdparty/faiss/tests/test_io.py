@@ -33,7 +33,7 @@ class TestIOVariants(unittest.TestCase):
                 data = f.read()
             # now damage file
             with open(fname, 'wb') as f:
-                f.write(data[:int(len(data) / 2)])
+                f.write(data[:len(data) // 2])
 
             # should make a nice readable exception that mentions the filename
             try:
@@ -67,11 +67,7 @@ class TestCallbacks(unittest.TestCase):
         faiss.write_index(index, writer)
         del writer   # make sure all writes committed
 
-        if sys.version_info[0] < 3:
-            buf = f.getvalue()
-        else:
-            buf = f.getbuffer()
-
+        buf = f.getvalue() if sys.version_info[0] < 3 else f.getbuffer()
         index2 = faiss.deserialize_index(np.frombuffer(buf, dtype='uint8'))
 
         self.assertEqual(index.d, index2.d)

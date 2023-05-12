@@ -30,9 +30,7 @@ def eval_inters(name, I, gt, times):
     for rank in 1, 10, 100, 1000:
         if rank > k:
             break
-        ninter = 0
-        for i in range(nq):
-            ninter += np.intersect1d(I[i, :rank], gt[i, :rank]).size
+        ninter = sum(np.intersect1d(I[i, :rank], gt[i, :rank]).size for i in range(nq))
         inter = ninter / (nq * rank)
         s += "@%d: %.4f " % (rank, inter)
     s += "time: %.4f s (± %.4f)" % (np.mean(times), np.std(times))
@@ -71,7 +69,7 @@ def main():
             'cat /proc/cpuinfo | grep ^processor | wc -l; '
             'cat /proc/cpuinfo | grep ^"model name" | tail -1')
 
-    cache_dir = args.base_dir + "/" + args.db + "/"
+    cache_dir = f"{args.base_dir}/{args.db}/"
     k = args.k
     nrun = args.nrun
 
@@ -82,7 +80,7 @@ def main():
 
         ds = load_dataset(args.db, download=args.download)
         print(ds)
-        if not os.path.exists(cache_dir + "xb.npy"):
+        if not os.path.exists(f"{cache_dir}xb.npy"):
             # store for SCANN
             os.system(f"rm -rf {cache_dir}; mkdir -p {cache_dir}")
             tosave = dict(
@@ -92,18 +90,18 @@ def main():
                 gt = ds.get_groundtruth()
             )
             for name, v in tosave.items():
-                fname = cache_dir + "/" + name + ".npy"
+                fname = f"{cache_dir}/{name}.npy"
                 print("save", fname)
                 np.save(fname, v)
 
-            open(cache_dir + "metric", "w").write(ds.metric)
+            open(f"{cache_dir}metric", "w").write(ds.metric)
 
         name1_to_metric = {
             "IP": faiss.METRIC_INNER_PRODUCT,
             "L2": faiss.METRIC_L2
         }
 
-        index_fname = cache_dir + "index.faiss"
+        index_fname = f"{cache_dir}index.faiss"
         if not os.path.exists(index_fname):
             index = faiss_make_index(
                 ds.get_database(), name1_to_metric[ds.metric], index_fname)
@@ -124,20 +122,20 @@ def main():
 
         dataset = {}
         for kn in "xb xq gt".split():
-            fname = cache_dir + "/" + kn + ".npy"
+            fname = f"{cache_dir}/{kn}.npy"
             print("load", fname)
             dataset[kn] = np.load(fname)
         name1_to_name2 = {
             "IP": "dot_product",
             "L2": "squared_l2"
         }
-        distance_measure = name1_to_name2[open(cache_dir + "metric").read()]
+        distance_measure = name1_to_name2[open(f"{cache_dir}metric").read()]
 
         xb = dataset["xb"]
         xq = dataset["xq"]
         gt = dataset["gt"]
 
-        scann_dir = cache_dir + "/scann1.1.1_serialized"
+        scann_dir = f"{cache_dir}/scann1.1.1_serialized"
         if os.path.exists(scann_dir + "/scann_config.pb"):
             searcher = scann_ops_pybind.load_searcher(scann_dir)
         else:
@@ -178,10 +176,7 @@ def scann_make_index(xb, distance_measure, scann_dir, reorder_k):
 
     print("build index")
 
-    if distance_measure == "dot_product":
-        thr = 0.2
-    else:
-        thr = 0
+    thr = 0.2 if distance_measure == "dot_product" else 0
     k = 10
     sb = scann.scann_ops_pybind.builder(xb, k, distance_measure)
     sb = sb.tree(num_leaves=2000, num_leaves_to_search=100, training_sample_size=250000)
@@ -216,20 +211,17 @@ def scann_eval_search(
 
             times = []
             for _run in range(nrun):
+                t0 = time.time()
                 if pre_reorder_k == 0:
-                    t0 = time.time()
                     I, D = searcher.search_batched(
                         xq, leaves_to_search=nprobe, final_num_neighbors=k
                     )
-                    t1 = time.time()
                 else:
-                    t0 = time.time()
                     I, D = searcher_reo.search_batched(
                         xq, leaves_to_search=nprobe, final_num_neighbors=k,
                         pre_reorder_num_neighbors=pre_reorder_k
                     )
-                    t1 = time.time()
-
+                t1 = time.time()
                 times.append(t1 - t0)
             header = "SCANN nprobe=%4d reo=%4d" % (nprobe, pre_reorder_k)
             if measure == "1-recall":
@@ -293,13 +285,11 @@ def faiss_eval_search(
                 if pre_reorder_k == 0:
                     t0 = time.time()
                     D, I = index.search(xq, k)
-                    t1 = time.time()
                 else:
                     index_refine.k_factor = pre_reorder_k / k
                     t0 = time.time()
                     D, I = index_refine.search(xq, k)
-                    t1 = time.time()
-
+                t1 = time.time()
                 times.append(t1 - t0)
 
             header = "Faiss nprobe=%4d reo=%4d" % (nprobe, pre_reorder_k)

@@ -40,8 +40,8 @@ if stage == 0:
     index = faiss.index_factory(xt.shape[1], "IVF4096,Flat")
     print("training index")
     index.train(xt)
-    print("write " + tmpdir + "trained.index")
-    faiss.write_index(index, tmpdir + "trained.index")
+    print(f"write {tmpdir}trained.index")
+    faiss.write_index(index, f"{tmpdir}trained.index")
 
 
 if 1 <= stage <= 4:
@@ -49,10 +49,10 @@ if 1 <= stage <= 4:
     bno = stage - 1
     xb = fvecs_read("sift1M/sift_base.fvecs")
     i0, i1 = int(bno * xb.shape[0] / 4), int((bno + 1) * xb.shape[0] / 4)
-    index = faiss.read_index(tmpdir + "trained.index")
+    index = faiss.read_index(f"{tmpdir}trained.index")
     print("adding vectors %d:%d" % (i0, i1))
     index.add_with_ids(xb[i0:i1], np.arange(i0, i1))
-    print("write " + tmpdir + "block_%d.index" % bno)
+    print(f"write {tmpdir}" + "block_%d.index" % bno)
     faiss.write_index(index, tmpdir + "block_%d.index" % bno)
 
 
@@ -69,7 +69,7 @@ if 5 <= stage <= 8:
     bno = stage - 5
 
     fname = tmpdir + "block_%d.index" % bno
-    print("read " + fname)
+    print(f"read {fname}")
     index = faiss.read_index(fname)
 
     port = machine_ports[bno][1]

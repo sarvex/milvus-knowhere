@@ -104,11 +104,7 @@ class TestRounding(unittest.TestCase):
         # rounded LUT with correction
         index2.implem = implem
         D4, I4 = index2.search(ds.get_queries(), 10)
-        # check accuracy of indexes
-        recalls = {}
-        for rank in 1, 10:
-            recalls[rank] = (Iref[:, :1] == I4[:, :rank]).sum() / nq
-
+        recalls = {rank: (Iref[:, :1] == I4[:, :rank]).sum() / nq for rank in (1, 10)}
         min_r1 = 0.98 if metric == faiss.METRIC_INNER_PRODUCT else 0.99
         self.assertGreater(recalls[1], min_r1)
         self.assertGreater(recalls[10], 0.995)

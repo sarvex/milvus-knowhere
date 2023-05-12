@@ -39,20 +39,20 @@ class TestRemove(unittest.TestCase):
                 filename)
             index1.replace_invlists(invlists)
 
-        index1.add(xb[:int(nb / 2)])
+        index1.add(xb[:nb // 2])
 
         index2 = faiss.IndexIVFFlat(quantizer, d, 20)
         assert index2.is_trained
-        index2.add(xb[int(nb / 2):])
+        index2.add(xb[nb // 2:])
 
         Dref, Iref = index1.search(xq, 10)
-        index1.merge_from(index2, int(nb / 2))
+        index1.merge_from(index2, nb // 2)
 
         assert index1.ntotal == nb
 
-        index1.remove_ids(faiss.IDSelectorRange(int(nb / 2), nb))
+        index1.remove_ids(faiss.IDSelectorRange(nb // 2, nb))
 
-        assert index1.ntotal == int(nb / 2)
+        assert index1.ntotal == nb // 2
         Dnew, Inew = index1.search(xq, 10)
 
         assert np.all(Dnew == Dref)
@@ -235,7 +235,7 @@ class TestPCAWhite(unittest.TestCase):
 
         # make distribution very skewed
         x *= [10, 4, 1, 0.5]
-        rr, _ = np.linalg.qr(faiss.randn(d * d).reshape(d, d))
+        rr, _ = np.linalg.qr(faiss.randn(d**2).reshape(d, d))
         x = np.dot(x, rr).astype('float32')
 
         xt = x[:nt]
@@ -277,7 +277,7 @@ class TestTransformChain(unittest.TestCase):
 
         # make distribution very skewed
         x *= [10, 4, 1, 0.5]
-        rr, _ = np.linalg.qr(faiss.randn(d * d).reshape(d, d))
+        rr, _ = np.linalg.qr(faiss.randn(d**2).reshape(d, d))
         x = np.dot(x, rr).astype('float32')
 
         xt = x[:nt]
@@ -507,30 +507,28 @@ class TestRenameOndisk(unittest.TestCase):
 
             # make an index with ondisk invlists
             invlists = faiss.OnDiskInvertedLists(
-                index1.nlist, index1.code_size,
-                dirname + '/aa.ondisk')
+                index1.nlist, index1.code_size, f'{dirname}/aa.ondisk'
+            )
             index1.replace_invlists(invlists)
             index1.add(xb)
             D1, I1 = index1.search(xq, 10)
-            faiss.write_index(index1, dirname + '/aa.ivf')
+            faiss.write_index(index1, f'{dirname}/aa.ivf')
 
             # move the index elsewhere
-            os.mkdir(dirname + '/1')
+            os.mkdir(f'{dirname}/1')
             for fname in 'aa.ondisk', 'aa.ivf':
-                os.rename(dirname + '/' + fname,
-                          dirname + '/1/' + fname)
+                os.rename(f'{dirname}/{fname}', f'{dirname}/1/{fname}')
 
             # try to read it: fails!
             try:
-                index2 = faiss.read_index(dirname + '/1/aa.ivf')
+                index2 = faiss.read_index(f'{dirname}/1/aa.ivf')
             except RuntimeError:
                 pass   # normal
             else:
                 assert False
 
             # read it with magic flag
-            index2 = faiss.read_index(dirname + '/1/aa.ivf',
-                                      faiss.IO_FLAG_ONDISK_SAME_DIR)
+            index2 = faiss.read_index(f'{dirname}/1/aa.ivf', faiss.IO_FLAG_ONDISK_SAME_DIR)
             D2, I2 = index2.search(xq, 10)
             assert np.all(I1 == I2)
 

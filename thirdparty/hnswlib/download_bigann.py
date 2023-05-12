@@ -11,17 +11,17 @@ for link in links:
     name = link.rsplit('/', 1)[-1]
     filename = os.path.join('downloads', name)
     if not os.path.isfile(filename):
-        print('Downloading: ' + filename)
+        print(f'Downloading: {filename}')
         try:
-            os.system('wget --output-document=' + filename + ' ' + link)
+            os.system(f'wget --output-document={filename} {link}')
         except Exception as inst:
             print(inst)
             print('  Encountered unknown error. Continuing.')
     else:
-        print('Already downloaded: ' + filename)
+        print(f'Already downloaded: {filename}')
     if filename.endswith('.tar.gz'):
-        command = 'tar -zxf ' + filename + ' --directory bigann'
+        command = f'tar -zxf {filename} --directory bigann'
     else:
-        command = 'cat ' + filename + ' | gzip -dc > bigann/' + name.replace(".gz", "")
+        command = f'cat {filename} | gzip -dc > bigann/' + name.replace(".gz", "")
     print("Unpacking file:", command)
     os.system(command)

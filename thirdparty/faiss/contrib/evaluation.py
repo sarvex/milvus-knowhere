@@ -85,11 +85,7 @@ def counts_to_PR(ngt, nres, ninter, mode="overall"):
     if mode == "overall":
         ngt, nres, ninter = ngt.sum(), nres.sum(), ninter.sum()
 
-        if nres > 0:
-            precision = ninter / nres
-        else:
-            precision = 1.0
-
+        precision = ninter / nres if nres > 0 else 1.0
         if ngt > 0:
             recall = ninter / ngt
         elif nres == 0:
@@ -253,12 +249,11 @@ def test_ref_range_results(lims_ref, Dref, Iref,
         Ii_new = Inew[l0:l1]
         Di_ref = Dref[l0:l1]
         Di_new = Dnew[l0:l1]
-        if np.all(Ii_ref == Ii_new): # easy
-            pass
-        else:
+        if not np.all(Ii_ref == Ii_new):
             def sort_by_ids(I, D):
                 o = I.argsort()
                 return I[o], D[o]
+
             # sort both
             (Ii_ref, Di_ref) = sort_by_ids(Ii_ref, Di_ref)
             (Ii_new, Di_new) = sort_by_ids(Ii_new, Di_new)

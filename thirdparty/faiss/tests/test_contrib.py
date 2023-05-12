@@ -76,9 +76,7 @@ class TestDatasets(unittest.TestCase):
     def test_synthetic_iterator(self):
         ds = datasets.SyntheticDataset(32, 1000, 2000, 10)
         xb = ds.get_database()
-        xb2 = []
-        for xbi in ds.database_iterator():
-            xb2.append(xbi)
+        xb2 = list(ds.database_iterator())
         xb2 = np.vstack(xb2)
         np.testing.assert_array_equal(xb, xb2)
 

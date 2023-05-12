@@ -35,10 +35,11 @@ class TestBinaryPQ(unittest.TestCase):
         nb = 1500
         nq = 500
         (xt, xb, xq) = make_binary_dataset(d, nt, nb, nq)
-        pq = faiss.ProductQuantizer(d, int(d / 8), 8)
+        pq = faiss.ProductQuantizer(d, d // 8, 8)
 
         centroids = binary_to_float(
-            np.tile(np.arange(256), int(d / 8)).astype('uint8').reshape(-1, 1))
+            np.tile(np.arange(256), d // 8).astype('uint8').reshape(-1, 1)
+        )
 
         faiss.copy_array_to_vector(centroids.ravel(), pq.centroids)
         pq.is_trained = True
@@ -47,7 +48,7 @@ class TestBinaryPQ(unittest.TestCase):
 
         assert np.all(codes == xb)
 
-        indexpq = faiss.IndexPQ(d, int(d / 8), 8)
+        indexpq = faiss.IndexPQ(d, d // 8, 8)
         indexpq.pq = pq
         indexpq.is_trained = True
 
@@ -65,7 +66,7 @@ class TestBinaryPQ(unittest.TestCase):
         iflat = faiss.IndexIVFFlat(quantizer, d, nlist)
         iflat.train(binary_to_float(xt))
 
-        indexivfpq = faiss.IndexIVFPQ(quantizer, d, nlist, int(d / 8), 8)
+        indexivfpq = faiss.IndexIVFPQ(quantizer, d, nlist, d // 8, 8)
 
         indexivfpq.pq = pq
         indexivfpq.is_trained = True

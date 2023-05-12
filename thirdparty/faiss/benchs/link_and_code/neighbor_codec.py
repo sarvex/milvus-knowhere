@@ -33,7 +33,7 @@ def train_kmeans(x, k, ngpu, max_points_per_centroid=256):
     if ngpu == 0:
         index = faiss.IndexFlatL2(d)
     else:
-        res = [faiss.StandardGpuResources() for i in range(ngpu)]
+        res = [faiss.StandardGpuResources() for _ in range(ngpu)]
 
         flat_config = []
         for i in range(ngpu):
@@ -71,9 +71,7 @@ def train_kmeans(x, k, ngpu, max_points_per_centroid=256):
 # works with both a full Inn table and dynamically generated neighbors
 
 def get_Inn_shape(Inn):
-    if type(Inn) != tuple:
-        return Inn.shape
-    return Inn[:2]
+    return Inn.shape if type(Inn) != tuple else Inn[:2]
 
 def get_neighbor_table(x_coded, Inn, i):
     if type(Inn) != tuple:
@@ -104,7 +102,7 @@ def regress_from_neighbors (x, x_coded, Inn):
 
 
 # find the best beta minimizing ||x-x_coded[Inn,:]*beta||^2
-def regress_opt_beta (x, x_coded, Inn):
+def regress_opt_beta(x, x_coded, Inn):
     (N, knn) = get_Inn_shape(Inn)
     d = x.shape[1]
 
@@ -115,13 +113,12 @@ def regress_opt_beta (x, x_coded, Inn):
         X[i*d:(i+1)*d] = x[i,:]
         neighbor_table = get_neighbor_table(x_coded, Inn, i)
         Y[i*d:(i+1)*d, :] = neighbor_table.transpose()
-    beta_opt = np.linalg.lstsq(Y, X, rcond=0.01)[0]
-    return beta_opt
+    return np.linalg.lstsq(Y, X, rcond=0.01)[0]
 
 
 # Find the best encoding by minimizing the reconstruction error using
 # a set of pre-computed beta values
-def assign_beta (beta_centroids, x, x_coded, Inn, verbose=True):
+def assign_beta(beta_centroids, x, x_coded, Inn, verbose=True):
     if type(Inn) == tuple:
         return assign_beta_2(beta_centroids, x, x_coded, Inn)
     (N, knn) = Inn.shape
@@ -134,9 +131,8 @@ def assign_beta (beta_centroids, x, x_coded, Inn, verbose=True):
         x_reg_all = np.dot (beta_centroids, NNi)
         err = ((x_reg_all - x[i,:]) ** 2).sum(axis=1)
         x_ibeta[i] = err.argmin()
-        if verbose:
-            if i % (N / 10) == 0:
-                print ("[%d:%d]  %6.3fs" % (i, i + N / 10, time.time() - t0))
+        if verbose and i % (N / 10) == 0:
+            print ("[%d:%d]  %6.3fs" % (i, i + N / 10, time.time() - t0))
     return x_ibeta
 
 

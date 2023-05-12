@@ -64,7 +64,7 @@ class Dataset:
         assert self.get_queries().shape == (self.nq, self.d)
         if self.nt > 0:
             xt = self.get_train(maxtrain=123)
-            assert xt.shape == (123, self.d), "shape=%s" % (xt.shape, )
+            assert xt.shape == (123, self.d), f"shape={xt.shape}"
         assert self.get_database().shape == (self.nb, self.d)
         assert self.get_groundtruth(k=13).shape == (self.nq, 13)
 
@@ -135,20 +135,20 @@ class DatasetSIFT1M(Dataset):
     def __init__(self):
         Dataset.__init__(self)
         self.d, self.nt, self.nb, self.nq = 128, 100000, 1000000, 10000
-        self.basedir = dataset_basedir + 'sift1M/'
+        self.basedir = f'{dataset_basedir}sift1M/'
 
     def get_queries(self):
-        return fvecs_read(self.basedir + "sift_query.fvecs")
+        return fvecs_read(f"{self.basedir}sift_query.fvecs")
 
     def get_train(self, maxtrain=None):
         maxtrain = maxtrain if maxtrain is not None else self.nt
-        return fvecs_read(self.basedir + "sift_learn.fvecs")[:maxtrain]
+        return fvecs_read(f"{self.basedir}sift_learn.fvecs")[:maxtrain]
 
     def get_database(self):
-        return fvecs_read(self.basedir + "sift_base.fvecs")
+        return fvecs_read(f"{self.basedir}sift_base.fvecs")
 
     def get_groundtruth(self, k=None):
-        gt = ivecs_read(self.basedir + "sift_groundtruth.ivecs")
+        gt = ivecs_read(f"{self.basedir}sift_groundtruth.ivecs")
         if k is not None:
             assert k <= 100
             gt = gt[:, :k]
@@ -171,14 +171,14 @@ class DatasetBigANN(Dataset):
         self.nb_M = nb_M
         nb = nb_M * 10**6
         self.d, self.nt, self.nb, self.nq = 128, 10**8, nb, 10000
-        self.basedir = dataset_basedir + 'bigann/'
+        self.basedir = f'{dataset_basedir}bigann/'
 
     def get_queries(self):
-        return sanitize(bvecs_mmap(self.basedir + 'bigann_query.bvecs')[:])
+        return sanitize(bvecs_mmap(f'{self.basedir}bigann_query.bvecs')[:])
 
     def get_train(self, maxtrain=None):
         maxtrain = maxtrain if maxtrain is not None else self.nt
-        return sanitize(bvecs_mmap(self.basedir + 'bigann_learn.bvecs')[:maxtrain])
+        return sanitize(bvecs_mmap(f'{self.basedir}bigann_learn.bvecs')[:maxtrain])
 
     def get_groundtruth(self, k=None):
         gt = ivecs_read(self.basedir + 'gnd/idx_%dM.ivecs' % self.nb_M)
@@ -189,10 +189,10 @@ class DatasetBigANN(Dataset):
 
     def get_database(self):
         assert self.nb_M < 100, "dataset too large, use iterator"
-        return sanitize(bvecs_mmap(self.basedir + 'bigann_base.bvecs')[:self.nb])
+        return sanitize(bvecs_mmap(f'{self.basedir}bigann_base.bvecs')[:self.nb])
 
     def database_iterator(self, bs=128, split=(1, 0)):
-        xb = bvecs_mmap(self.basedir + 'bigann_base.bvecs')
+        xb = bvecs_mmap(f'{self.basedir}bigann_base.bvecs')
         nsplit, rank = split
         i0, i1 = self.nb * rank // nsplit, self.nb * (rank + 1) // nsplit
         for j0 in range(i0, i1, bs):
@@ -217,16 +217,15 @@ class DatasetDeep1B(Dataset):
         }
         assert nb in nb_to_name
         self.d, self.nt, self.nb, self.nq = 96, 358480000, nb, 10000
-        self.basedir = dataset_basedir + 'deep1b/'
-        self.gt_fname = "%sdeep%s_groundtruth.ivecs" % (
-            self.basedir, nb_to_name[self.nb])
+        self.basedir = f'{dataset_basedir}deep1b/'
+        self.gt_fname = f"{self.basedir}deep{nb_to_name[self.nb]}_groundtruth.ivecs"
 
     def get_queries(self):
-        return sanitize(fvecs_read(self.basedir + "deep1B_queries.fvecs"))
+        return sanitize(fvecs_read(f"{self.basedir}deep1B_queries.fvecs"))
 
     def get_train(self, maxtrain=None):
         maxtrain = maxtrain if maxtrain is not None else self.nt
-        return sanitize(fvecs_mmap(self.basedir + "learn.fvecs")[:maxtrain])
+        return sanitize(fvecs_mmap(f"{self.basedir}learn.fvecs")[:maxtrain])
 
     def get_groundtruth(self, k=None):
         gt = ivecs_read(self.gt_fname)
@@ -237,10 +236,10 @@ class DatasetDeep1B(Dataset):
 
     def get_database(self):
         assert self.nb <= 10**8, "dataset too large, use iterator"
-        return sanitize(fvecs_mmap(self.basedir + "base.fvecs")[:self.nb])
+        return sanitize(fvecs_mmap(f"{self.basedir}base.fvecs")[:self.nb])
 
     def database_iterator(self, bs=128, split=(1, 0)):
-        xb = fvecs_mmap(self.basedir + "base.fvecs")
+        xb = fvecs_mmap(f"{self.basedir}base.fvecs")
         nsplit, rank = split
         i0, i1 = self.nb * rank // nsplit, self.nb * (rank + 1) // nsplit
         for j0 in range(i0, i1, bs):
@@ -256,7 +255,7 @@ class DatasetGlove(Dataset):
         import h5py
         assert not download, "not implemented"
         if not loc:
-            loc = dataset_basedir + 'glove/glove-100-angular.hdf5'
+            loc = f'{dataset_basedir}glove/glove-100-angular.hdf5'
         self.glove_h5py = h5py.File(loc, 'r')
         # IP and L2 are equivalent in this case, but it is traditionally seen as an IP dataset
         self.metric = 'IP'
@@ -292,20 +291,20 @@ class DatasetMusic100(Dataset):
         Dataset.__init__(self)
         self.d, self.nt, self.nb, self.nq = 100, 0, 10**6, 10000
         self.metric = 'IP'
-        self.basedir = dataset_basedir + 'music-100/'
+        self.basedir = f'{dataset_basedir}music-100/'
 
     def get_queries(self):
-        xq = np.fromfile(self.basedir + 'query_music100.bin', dtype='float32')
+        xq = np.fromfile(f'{self.basedir}query_music100.bin', dtype='float32')
         xq = xq.reshape(-1, 100)
         return xq
 
     def get_database(self):
-        xb = np.fromfile(self.basedir + 'database_music100.bin', dtype='float32')
+        xb = np.fromfile(f'{self.basedir}database_music100.bin', dtype='float32')
         xb = xb.reshape(-1, 100)
         return xb
 
     def get_groundtruth(self, k=None):
-        gt = np.load(self.basedir + 'gt.npy')
+        gt = np.load(f'{self.basedir}gt.npy')
         if k is not None:
             assert k <= 100
             gt = gt[:, :k]

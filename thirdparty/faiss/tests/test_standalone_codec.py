@@ -272,20 +272,15 @@ class TestBitstring(unittest.TestCase):
         bs = np.ones(nbyte, dtype='uint8')
         bw = faiss.BitstringWriter(swig_ptr(bs), nbyte)
 
-        if False:
-            ctrl = [(7, 0x35), (13, 0x1d74)]
-            for nbit, x in ctrl:
-                bw.write(x, nbit)
-        else:
-            ctrl = []
-            while True:
-                nbit = int(1 + 62 * rs.rand() ** 4)
-                if sz + nbit > nbyte * 8:
-                    break
-                x = int(rs.randint(1 << nbit, dtype='int64'))
-                bw.write(x, nbit)
-                ctrl.append((nbit, x))
-                sz += nbit
+        ctrl = []
+        while True:
+            nbit = int(1 + 62 * rs.rand() ** 4)
+            if sz + nbit > nbyte * 8:
+                break
+            x = int(rs.randint(1 << nbit, dtype='int64'))
+            bw.write(x, nbit)
+            ctrl.append((nbit, x))
+            sz += nbit
 
         bignum = 0
         sz = 0

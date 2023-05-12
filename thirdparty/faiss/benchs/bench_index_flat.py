@@ -22,15 +22,12 @@ def format_tab(x):
 
 faiss.cvar.distance_compute_min_k_reservoir = 5
 
+nb = 10000
+
 # for have_threads in True, False:
-for have_threads in False, :
+for have_threads in False,:
 
-    if have_threads:
-        # good config for Intel(R) Xeon(R) CPU E5-2698 v4 @ 2.20GHz
-        nthread = 32
-    else:
-        nthread = 1
-
+    nthread = 32 if have_threads else 1
     faiss.omp_set_num_threads(nthread)
     print("************ nthread=", nthread)
 
@@ -46,11 +43,10 @@ for have_threads in False, :
             unit = "s"
 
         restab = []
+        nrun = 10
         for d in 16, 32, 64, 128:
 
             print("========== d=", d)
-
-            nb = 10000
 
             # d = 32
 
@@ -62,7 +58,6 @@ for have_threads in False, :
 
             index.add(ds.get_database())
 
-            nrun = 10
             restab1 = []
             restab.append(restab1)
             for k in 1, 10, 100:

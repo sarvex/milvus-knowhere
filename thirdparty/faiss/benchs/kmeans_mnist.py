@@ -37,7 +37,7 @@ def load_mnist(fname):
 
 basedir = "/path/to/mnist/data"
 
-x = load_mnist(basedir + 'mnist8m/mnist8m-patterns-idx3-ubyte')
+x = load_mnist(f'{basedir}mnist8m/mnist8m-patterns-idx3-ubyte')
 
 print("reshape")
 
@@ -54,7 +54,7 @@ def train_kmeans(x, k, ngpu):
     # otherwise the kmeans implementation sub-samples the training set
     clus.max_points_per_centroid = 10000000
 
-    res = [faiss.StandardGpuResources() for i in range(ngpu)]
+    res = [faiss.StandardGpuResources() for _ in range(ngpu)]
 
     flat_config = []
     for i in range(ngpu):

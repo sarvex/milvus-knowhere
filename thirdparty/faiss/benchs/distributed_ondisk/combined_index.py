@@ -151,7 +151,7 @@ class CombinedIndexDeep1B(CombinedIndex):
         workdir = "/checkpoint/matthijs/ondisk_distributed/"
 
         # empty index with the proper quantizer
-        indexfname = workdir + 'trained.faissindex'
+        indexfname = f'{workdir}trained.faissindex'
 
         # index that has some invlists that override the big one
         masked_index_fname = None
@@ -179,8 +179,8 @@ if __name__ == '__main__':
 
     deep1bdir = "/datasets01_101/simsearch/041218/deep1b/"
 
-    xq = fvecs_read(deep1bdir + "deep1B_queries.fvecs")
-    gt_fname = deep1bdir + "deep1B_groundtruth.ivecs"
+    xq = fvecs_read(f"{deep1bdir}deep1B_queries.fvecs")
+    gt_fname = f"{deep1bdir}deep1B_groundtruth.ivecs"
     gt = ivecs_read(gt_fname)
 
     for nprobe in 1, 10, 100, 1000:

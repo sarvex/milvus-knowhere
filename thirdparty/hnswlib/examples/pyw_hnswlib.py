@@ -40,12 +40,12 @@ class Index():
 
     def load_index(self, path):
         self.index.load_index(path)
-        with open(path + ".pkl", "rb") as f:
+        with open(f"{path}.pkl", "rb") as f:
             self.cur_ind, self.dict_labels = pickle.load(f)
 
     def save_index(self, path):
         self.index.save_index(path)
-        with open(path + ".pkl", "wb") as f:
+        with open(f"{path}.pkl", "wb") as f:
             pickle.dump((self.cur_ind, self.dict_labels), f)
 
     def set_num_threads(self, num_threads):
@@ -53,9 +53,5 @@ class Index():
 
     def knn_query(self, data, k=1):
         labels_int, distances = self.index.knn_query(data=data, k=k)
-        labels = []
-        for li in labels_int:
-            labels.append(
-                [self.dict_labels[l] for l in li]
-            )
+        labels = [[self.dict_labels[l] for l in li] for li in labels_int]
         return labels, distances

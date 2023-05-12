@@ -149,10 +149,7 @@ def range_ground_truth(xq, db_iterator, threshold, metric_type=faiss.METRIC_L2,
 
 def threshold_radius_nres(nres, dis, ids, thresh, keep_max=False):
     """ select a set of results """
-    if keep_max:
-        mask = dis > thresh
-    else:
-        mask = dis < thresh
+    mask = dis > thresh if keep_max else dis < thresh
     new_nres = np.zeros_like(nres)
     o = 0
     for i, nr in enumerate(nres):
@@ -164,10 +161,7 @@ def threshold_radius_nres(nres, dis, ids, thresh, keep_max=False):
 
 def threshold_radius(lims, dis, ids, thresh, keep_max=False):
     """ restrict range-search results to those below a given radius """
-    if keep_max:
-        mask = dis > thresh
-    else:
-        mask = dis < thresh
+    mask = dis > thresh if keep_max else dis < thresh
     new_lims = np.zeros_like(lims)
     n = len(lims) - 1
     for i in range(n):
@@ -189,11 +183,8 @@ def apply_maxres(res_batches, target_nres, keep_max=False):
         alldis.partition(target_nres)
         radius = alldis[target_nres]
 
-    if alldis.dtype == 'float32':
-        radius = float(radius)
-    else:
-        radius = int(radius)
-    LOG.debug('   setting radius to %s' % radius)
+    radius = float(radius) if alldis.dtype == 'float32' else int(radius)
+    LOG.debug(f'   setting radius to {radius}')
     totres = 0
     for i, (nres, dis, ids) in enumerate(res_batches):
         nres, dis, ids = threshold_radius_nres(

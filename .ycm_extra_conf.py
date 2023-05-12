@@ -72,36 +72,36 @@ else:
 
 
 def Settings(**kwargs):
-    if kwargs["language"] == "cfamily":
-        # If the file is a header, try to find the corresponding source file and
-        # retrieve its flags from the compilation database if using one. This is
-        # necessary since compilation databases don't have entries for header files.
-        # In addition, use this source file as the translation unit. This makes it
-        # possible to jump from a declaration in the header file to its definition
-        # in the corresponding source file.
-        filename = kwargs["filename"]
+    if kwargs["language"] != "cfamily":
+        return {}
+    # If the file is a header, try to find the corresponding source file and
+    # retrieve its flags from the compilation database if using one. This is
+    # necessary since compilation databases don't have entries for header files.
+    # In addition, use this source file as the translation unit. This makes it
+    # possible to jump from a declaration in the header file to its definition
+    # in the corresponding source file.
+    filename = kwargs["filename"]
 
-        if IsHeaderFile(filename) or not database:
-            return {
-                "flags": flags,
-                "include_paths_relative_to_dir": DIR_OF_THIS_SCRIPT,
-                "override_filename": filename,
-            }
-
-        compilation_info = database.GetCompilationInfoForFile(filename)
-        if not compilation_info.compiler_flags_:
-            return {
-                "flags": flags,
-                "include_paths_relative_to_dir": DIR_OF_THIS_SCRIPT,
-                "override_filename": filename,
-            }
-
-        # Bear in mind that compilation_info.compiler_flags_ does NOT return a
-        # python list, but a "list-like" StringVec object.
-        final_flags = list(compilation_info.compiler_flags_)
+    if IsHeaderFile(filename) or not database:
         return {
-            "flags": final_flags,
-            "include_paths_relative_to_dir": compilation_info.compiler_working_dir_,
+            "flags": flags,
+            "include_paths_relative_to_dir": DIR_OF_THIS_SCRIPT,
             "override_filename": filename,
         }
-    return {}
+
+    compilation_info = database.GetCompilationInfoForFile(filename)
+    if not compilation_info.compiler_flags_:
+        return {
+            "flags": flags,
+            "include_paths_relative_to_dir": DIR_OF_THIS_SCRIPT,
+            "override_filename": filename,
+        }
+
+    # Bear in mind that compilation_info.compiler_flags_ does NOT return a
+    # python list, but a "list-like" StringVec object.
+    final_flags = list(compilation_info.compiler_flags_)
+    return {
+        "flags": final_flags,
+        "include_paths_relative_to_dir": compilation_info.compiler_working_dir_,
+        "override_filename": filename,
+    }

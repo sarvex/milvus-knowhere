@@ -7,13 +7,13 @@ import hnswlib
 
 class RandomSelfTestCase(unittest.TestCase):
     def testRandomSelf(self):
+        dim = 16
+        num_elements = 10000
+
         for idx in range(16):
             print("\n**** Index resize test ****\n")
 
             np.random.seed(idx)
-            dim = 16
-            num_elements = 10000
-
             # Generating sample data
             data = np.float32(np.random.random((num_elements, dim)))
 

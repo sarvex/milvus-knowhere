@@ -30,8 +30,8 @@ class CustomBuildPy(build_py):
 
 def get_thirdparty_prefix(lib_name):
     prefix = ""
-    with open(os.path.join("..", "build", lib_name + ".pc")) as f:
-        for line in f.readlines():
+    with open(os.path.join("..", "build", f"{lib_name}.pc")) as f:
+        for line in f:
             if line.startswith("prefix="):
                 prefix = line.strip().split("=")[1]
                 break

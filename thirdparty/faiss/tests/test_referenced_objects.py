@@ -86,8 +86,8 @@ class TestReferenced(unittest.TestCase):
 
 
 dbin = 32
-xtbin = np.random.randint(256, size=(100, int(dbin / 8))).astype('uint8')
-xbbin = np.random.randint(256, size=(20, int(dbin / 8))).astype('uint8')
+xtbin = np.random.randint(256, size=(100, dbin // 8)).astype('uint8')
+xbbin = np.random.randint(256, size=(20, dbin // 8)).astype('uint8')
 
 
 class TestReferencedBinary(unittest.TestCase):

@@ -64,7 +64,7 @@ pf = 'dim%d_' % d
 if d == 64:
     pf = ''
 
-basename = '/tmp/base%s%s.index' % (pf, key)
+basename = f'/tmp/base{pf}{key}.index'
 
 if os.path.exists(basename):
     print('load', basename)

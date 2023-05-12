@@ -146,7 +146,7 @@ for index_key in keys_to_test:
     opi.display()
 
     # update best operating points so far
-    op.merge_with(opi, index_key + " ")
+    op.merge_with(opi, f"{index_key} ")
 
     op_per_key.append((index_key, opi))
 

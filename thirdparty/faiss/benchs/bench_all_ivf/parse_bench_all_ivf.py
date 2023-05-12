@@ -33,12 +33,11 @@ def keep_latest_stdout(fnames):
     fnames = [fname for fname in fnames if fname.endswith('.stdout')]
     fnames.sort()
     n = len(fnames)
-    fnames2 = []
-    for i, fname in enumerate(fnames):
-        if i + 1 < n and fnames[i + 1][:-8] == fname[:-8]:
-            continue
-        fnames2.append(fname)
-    return fnames2
+    return [
+        fname
+        for i, fname in enumerate(fnames)
+        if i + 1 >= n or fnames[i + 1][:-8] != fname[:-8]
+    ]
 
 
 def parse_result_file(fname):
@@ -46,8 +45,7 @@ def parse_result_file(fname):
     st = 0
     res = []
     keys = []
-    stats = {}
-    stats['run_version'] = fname[-8]
+    stats = {'run_version': fname[-8]}
     indexkey = None
     for l in open(fname):
         if l.startswith("srun:"):
@@ -88,10 +86,7 @@ def parse_result_file(fname):
                 elif 'inter@' in l:
                     stats["measure"] = "inter"
                     fi = l.split()
-                    if fi[1] == "inter@":
-                        rank = int(fi[2])
-                    else:
-                        rank = int(fi[1][len("inter@"):])
+                    rank = int(fi[2]) if fi[1] == "inter@" else int(fi[1][len("inter@"):])
                     stats["ranks"] = [rank]
 
                 else:
@@ -112,7 +107,7 @@ def parse_result_file(fname):
 
 # the directory used in run_on_cluster.bash
 basedir = "/checkpoint/matthijs/bench_all_ivf/"
-logdir = basedir + 'logs/'
+logdir = f'{basedir}logs/'
 
 
 def collect_results_for(db='deep1M', prefix="autotune."):
@@ -129,29 +124,31 @@ def collect_results_for(db='deep1M', prefix="autotune."):
 
     for fname in fnames:
         if not (
-                'db' + db in fname and
-                fname.startswith(prefix) and
-                fname.endswith('.stdout')
-            ):
+            f'db{db}' in fname
+            and fname.startswith(prefix)
+            and fname.endswith('.stdout')
+        ):
             continue
         print("parse", fname, end="   ", flush=True)
         try:
             indexkey, res, _, stats = parse_result_file(logdir + fname)
         except RuntimeError as e:
-            print("FAIL %s" % e)
+            print(f"FAIL {e}")
             res = np.zeros((2, 0))
         except Exception as e:
-            print("PARSE ERROR " + e)
+            print(f"PARSE ERROR {e}")
             res = np.zeros((2, 0))
         else:
             print(len(res), "results")
         if res.size == 0:
             missing.append(fname)
         else:
-            if indexkey in allres:
-                if allstats[indexkey]['run_version'] > stats['run_version']:
-                    # don't use this run
-                    continue
+            if (
+                indexkey in allres
+                and allstats[indexkey]['run_version'] > stats['run_version']
+            ):
+                # don't use this run
+                continue
 
             allres[indexkey] = res
             allstats[indexkey] = stats
@@ -170,7 +167,7 @@ def extract_pareto_optimal(allres, keys, recall_idx=0, times_idx=3):
                 perf, times
             ))
         )
-    if bigtab == []:
+    if not bigtab:
         return [], np.zeros((3, 0))
 
     bigtab = np.hstack(bigtab)
@@ -192,6 +189,8 @@ def plot_subset(
     allres, allstats, selected_methods, recall_idx, times_idx=3,
     report=["overhead", "build time"]):
 
+    id_size = 8 # 64 bit
+
     # important methods
     for k in selected_methods:
         v = allres[k]
@@ -203,8 +202,6 @@ def plot_subset(
             tot_size = stats['index_size'] + stats['tables_size']
         else:
             tot_size = -1
-        id_size = 8 # 64 bit
-
         addt = ''
         if 'add_time' in stats:
             add_time = stats['add_time']
@@ -233,7 +230,7 @@ def plot_subset(
                 tot_size / tight_size * 100 - 100)
 
         if "build time" in report:
-            label += " " + addt
+            label += f" {addt}"
 
         linestyle = (':' if 'Refine' in k or 'RFlat' in k else
                      '-.' if 'SQ' in k else
@@ -294,7 +291,7 @@ def plot_tradeoffs(db, allres, allstats, code_size, recall_rank):
 
     print("methods without an optimal OP: ", not_selected)
 
-    pyplot.title('database ' + db + ' ' + code_size_name)
+    pyplot.title(f'database {db} {code_size_name}')
 
     # grayed out lines
 
@@ -316,7 +313,7 @@ def plot_tradeoffs(db, allres, allstats, code_size, recall_rank):
     plot_subset(allres, allstats, selected_methods, recall_idx, times_idx)
 
 
-    if len(not_selected) == 0:
+    if not not_selected:
         om = ''
     else:
         om = '\nomitted:'
@@ -325,7 +322,7 @@ def plot_tradeoffs(db, allres, allstats, code_size, recall_rank):
             if nc > 80:
                 om += '\n'
                 nc = 0
-            om += ' ' + m
+            om += f' {m}'
             nc += len(m) + 1
 
     # pyplot.semilogy(optimal_points[1, :], optimal_points[2, :], marker="s")
@@ -343,8 +340,7 @@ if __name__ == "__main__xx":
 
     for k in 1, 32, 128:
         pyplot.gcf().set_size_inches(15, 10)
-        i = 1
-        for ncent in 65536, 262144, 1048576, 4194304:
+        for i, ncent in enumerate(65536, 262144, 1048576, 4194304, start=1):
             db = f'deep_centroids_{ncent}.k{k}.'
             allres, allstats = collect_results_for(
                 db=db, prefix="cent_index.")
@@ -356,7 +352,6 @@ if __name__ == "__main__xx":
                 times_idx=1,
                 report=["code_size"]
             )
-            i += 1
             pyplot.title(f"{ncent} centroids")
             pyplot.legend()
             pyplot.xlim([0.95, 1])
@@ -370,8 +365,7 @@ if __name__ == "__main__xx":
 
     pyplot.gcf().set_size_inches(15, 10)
 
-    i=1
-    for ncent in 65536, 262144, 1048576, 4194304:
+    for i, ncent in enumerate(65536, 262144, 1048576, 4194304, start=1):
 
         xyd = defaultdict(list)
 
@@ -386,7 +380,6 @@ if __name__ == "__main__xx":
                     xyd[indexkey].append((k, 1000 / res[idx[0], 1]))
 
         pyplot.subplot(2, 2, i)
-        i += 1
         for indexkey, xy in xyd.items():
             xy = np.array(xy)
             pyplot.loglog(xy[:, 0], xy[:, 1], 'o-', label=indexkey)
@@ -437,7 +430,7 @@ if __name__ == "__main__":
         i += 1
         allres, allstats = collect_results_for(db=db, prefix="autotune.")
         plot_tradeoffs(db, allres, allstats, code_size=0, recall_rank=1)
-        pyplot.savefig('../plots/1M_tradeoffs_' + db + ".png")
+        pyplot.savefig(f'../plots/1M_tradeoffs_{db}.png')
 
     for db in "sift1M", "deep1M":
         allres, allstats = collect_results_for(db=db, prefix="autotune.")
@@ -445,13 +438,13 @@ if __name__ == "__main__":
         pyplot.gcf().set_size_inches(15, 10)
         i += 1
         plot_tradeoffs(db, allres, allstats, code_size=(0, 64), recall_rank=1)
-        pyplot.savefig('../plots/1M_tradeoffs_' + db + "_small.png")
+        pyplot.savefig(f'../plots/1M_tradeoffs_{db}_small.png')
 
         pyplot.figure(i)
         pyplot.gcf().set_size_inches(15, 10)
         i += 1
         plot_tradeoffs(db, allres, allstats, code_size=(65, 10000), recall_rank=1)
-        pyplot.savefig('../plots/1M_tradeoffs_' + db + "_large.png")
+        pyplot.savefig(f'../plots/1M_tradeoffs_{db}_large.png')
 
 
 

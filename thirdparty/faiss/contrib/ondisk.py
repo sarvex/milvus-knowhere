@@ -21,7 +21,7 @@ def merge_ondisk(trained_index: faiss.Index,
         # the IO_FLAG_MMAP is to avoid actually loading the data thus
         # the total size of the inverted lists can exceed the
         # available RAM
-        LOG.info("read " + fname)
+        LOG.info(f"read {fname}")
         index = faiss.read_index(fname, faiss.IO_FLAG_MMAP)
         index_ivf = faiss.extract_index_ivf(index)
         ivfs.append(index_ivf.invlists)

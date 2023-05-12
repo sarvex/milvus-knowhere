@@ -45,11 +45,11 @@ class Randu10k:
 
     def evalres(self, DI):
         D, I = DI
-        e = {}
-        for rank in 1, 10, 100:
-            e[rank] = ((I[:, :rank] == self.gt.reshape(-1, 1)).sum() /
-                       float(self.nq))
-        print("1-recalls: %s" % e)
+        e = {
+            rank: ((I[:, :rank] == self.gt.reshape(-1, 1)).sum() / float(self.nq))
+            for rank in (1, 10, 100)
+        }
+        print(f"1-recalls: {e}")
         return e
 
 

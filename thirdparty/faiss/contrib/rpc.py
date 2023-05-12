@@ -121,13 +121,13 @@ class Server:
             (fname,args)=pickle.load(self.fs)
         except EOFError:
             raise ClientExit("read args")
-        self.log("executing method %s"%(fname))
+        self.log(f"executing method {fname}")
         st = None
         ret = None
         try:
             f=getattr(self,fname)
         except AttributeError:
-            st = AttributeError("unknown method "+fname)
+            st = AttributeError(f"unknown method {fname}")
             self.log("unknown method ")
 
         try:
@@ -158,9 +158,9 @@ class Server:
             while True:
                 self.one_function()
         except ClientExit as e:
-            self.log("ClientExit %s"%e)
+            self.log(f"ClientExit {e}")
         except socket.error as e:
-            self.log("socket error %s"%e)
+            self.log(f"socket error {e}")
             traceback.print_exc(50,self.logf)
         except EOFError:
             self.log("EOF during communication")
@@ -179,15 +179,12 @@ class Server:
     # spying stuff
 
     def get_ps_stats(self):
-        ret=''
         f=os.popen("echo ============ `hostname` uptime:; uptime;"+
                    "echo ============ self:; "+
                    "ps -p %d -o pid,vsize,rss,%%cpu,nlwp,psr; "%os.getpid()+
                    "echo ============ run queue:;"+
                    "ps ar -o user,pid,%cpu,%mem,ni,nlwp,psr,vsz,rss,cputime,command")
-        for l in f:
-            ret+=l
-        return ret
+        return ''.join(f)
 
 class Client:
     """
@@ -210,10 +207,11 @@ class Client:
 
     def get_result(self):
         (st, ret) = pickle.load(self.fs)
-        if st!=None:
-            raise ServerException(st)
-        else:
+        if st is None:
             return ret
+
+        else:
+            raise ServerException(st)
 
     def __getattr__(self,name):
         return lambda *x: self.generic_fun(name,x)

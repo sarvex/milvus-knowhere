@@ -47,7 +47,7 @@ class RandomSelfTestCase(unittest.TestCase):
 
         # Serializing and deleting the index:
         index_path = 'first_half.bin'
-        print("Saving index to '%s'" % index_path)
+        print(f"Saving index to '{index_path}'")
         p.save_index(index_path)
         del p
 
@@ -64,5 +64,5 @@ class RandomSelfTestCase(unittest.TestCase):
         labels, distances = p.knn_query(data, k=1)
 
         self.assertAlmostEqual(np.mean(labels.reshape(-1) == np.arange(len(data))), 1.0, 3)
-        
+
         os.remove(index_path)

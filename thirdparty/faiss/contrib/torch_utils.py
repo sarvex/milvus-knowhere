@@ -53,14 +53,14 @@ def swig_ptr_from_FloatTensor(x):
 def swig_ptr_from_IntTensor(x):
     """ gets a Faiss SWIG pointer from a pytorch tensor (on CPU or GPU) """
     assert x.is_contiguous()
-    assert x.dtype == torch.int32, 'dtype=%s' % x.dtype
+    assert x.dtype == torch.int32, f'dtype={x.dtype}'
     return faiss.cast_integer_to_int_ptr(
         x.storage().data_ptr() + x.storage_offset() * 8)
 
 def swig_ptr_from_IndicesTensor(x):
     """ gets a Faiss SWIG pointer from a pytorch tensor (on CPU or GPU) """
     assert x.is_contiguous()
-    assert x.dtype == torch.int64, 'dtype=%s' % x.dtype
+    assert x.dtype == torch.int64, f'dtype={x.dtype}'
     return faiss.cast_integer_to_idx_t_ptr(
         x.storage().data_ptr() + x.storage_offset() * 8)
 
@@ -98,13 +98,13 @@ def torch_replace_method(the_class, name, replacement,
         if ignore_missing:
             return
         raise
-    if orig_method.__name__ == 'torch_replacement_' + name:
+    if orig_method.__name__ == f'torch_replacement_{name}':
         # replacement was done in parent class
         return
 
     # We should already have the numpy replacement methods patched
-    assert ignore_no_base or (orig_method.__name__ == 'replacement_' + name)
-    setattr(the_class, name + '_numpy', orig_method)
+    assert ignore_no_base or orig_method.__name__ == f'replacement_{name}'
+    setattr(the_class, f'{name}_numpy', orig_method)
     setattr(the_class, name, replacement)
 
 def handle_torch_Index(the_class):

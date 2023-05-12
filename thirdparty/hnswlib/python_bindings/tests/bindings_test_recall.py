@@ -61,7 +61,7 @@ print("recall is :", float(correct)/(k*nun_queries))
 
 # test serializing  the brute force index
 index_path = 'bf_index.bin'
-print("Saving index to '%s'" % index_path)
+print(f"Saving index to '{index_path}'")
 bf_index.save_index(index_path)
 del bf_index
 

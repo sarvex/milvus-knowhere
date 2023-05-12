@@ -141,11 +141,7 @@ class EvalIVFPQAccuracy(unittest.TestCase):
         # this is a bit fragile: it assumes 2 runs of training give
         # the exact same result.
         index2 = faiss.Index2Layer(coarse_quantizer, 32, 8)
-        if True:
-            index2.train(xt)
-        else:
-            index2.pq = index.pq
-            index2.is_trained = True
+        index2.train(xt)
         index2.add(xb)
         ref_recons = index.reconstruct_n(0, nb)
         new_recons = index2.reconstruct_n(0, nb)
@@ -282,8 +278,6 @@ class TestScalarQuantizer(unittest.TestCase):
         index_gt.add(xb)
         D, I_ref = index_gt.search(xq, 10)
 
-        nok = {}
-
         index = faiss.IndexIVFFlat(quantizer, d, ncent,
                                    faiss.METRIC_L2)
         index.cp.min_points_per_centroid = 5    # quiet warning
@@ -291,8 +285,7 @@ class TestScalarQuantizer(unittest.TestCase):
         index.train(xt)
         index.add(xb)
         D, I = index.search(xq, 10)
-        nok['flat'] = (I[:, 0] == I_ref[:, 0]).sum()
-
+        nok = {'flat': (I[:, 0] == I_ref[:, 0]).sum()}
         for qname in "QT_4bit QT_4bit_uniform QT_8bit QT_8bit_uniform QT_fp16".split():
             qtype = getattr(faiss.ScalarQuantizer, qname)
             index = faiss.IndexIVFScalarQuantizer(quantizer, d, ncent,
@@ -668,7 +661,7 @@ class TestNSG(unittest.TestCase):
         Dnsg, Insg = index.search(self.xq, 1)
 
         recalls = (Iref == Insg).sum()
-        print('metric: {}, nb equal: {}'.format(metrics[metric], recalls))
+        print(f'metric: {metrics[metric]}, nb equal: {recalls}')
         self.assertGreaterEqual(recalls, thresh)
         self.subtest_connectivity(index, self.xb.shape[0])
         self.subtest_io_and_clone(index, Dnsg, Insg)
@@ -689,7 +682,7 @@ class TestNSG(unittest.TestCase):
         Dnsg, Insg = index.search(self.xq, 1)
 
         recalls = (Iref == Insg).sum()
-        print('metric: {}, nb equal: {}'.format(metrics[metric], recalls))
+        print(f'metric: {metrics[metric]}, nb equal: {recalls}')
         self.assertGreaterEqual(recalls, thresh)
         self.subtest_connectivity(index, self.xb.shape[0])
 
@@ -745,7 +738,7 @@ class TestNSG(unittest.TestCase):
         index.add(self.xb)
         Dnsg, Insg = index.search(self.xq, 1)
         recalls = (Iref == Insg).sum()
-        print('metric: {}, nb equal: {}'.format(metrics[metric], recalls))
+        print(f'metric: {metrics[metric]}, nb equal: {recalls}')
         self.assertGreaterEqual(recalls, 475)
         self.subtest_connectivity(index, self.xb.shape[0])
 
@@ -753,7 +746,7 @@ class TestNSG(unittest.TestCase):
         index.add(self.xb)
         Dnsg, Insg = index.search(self.xq, 1)
         recalls = (Iref == Insg).sum()
-        print('metric: {}, nb equal: {}'.format(metrics[metric], recalls))
+        print(f'metric: {metrics[metric]}, nb equal: {recalls}')
         self.assertGreaterEqual(recalls, 475)
         self.subtest_connectivity(index, self.xb.shape[0])
 
@@ -925,7 +918,7 @@ class TestReconsHash(unittest.TestCase):
             self.assertTrue(np.all(recons == ref_recons[i]))
 
         # remove
-        toremove = np.ascontiguousarray(ids[0:200:3])
+        toremove = np.ascontiguousarray(ids[:200:3])
 
         sel = faiss.IDSelectorArray(50, faiss.swig_ptr(toremove[:50]))
 

@@ -12,14 +12,6 @@ import time
 
 swig_ptr = faiss.swig_ptr
 
-if False:
-    a = np.arange(10, 14).astype('float32')
-    b = np.arange(20, 24).astype('float32')
-
-    faiss.fvec_inner_product (swig_ptr(a), swig_ptr(b), 4)
-
-    1/0
-
 xd = 100
 yd = 1000000
 
@@ -30,6 +22,8 @@ faiss.omp_set_num_threads(1)
 print('xd=%d yd=%d' % (xd, yd))
 
 print('Running inner products test..')
+# sparse verification
+ntry = 100
 for d in 3, 4, 12, 36, 64:
 
     x = faiss.rand(xd * d).reshape(xd, d)
@@ -45,10 +39,8 @@ for d in 3, 4, 12, 36, 64:
                                      d, yd)
     t1 = time.time()
 
-    # sparse verification
-    ntry = 100
     num, denom = 0, 0
-    for t in range(ntry):
+    for _ in range(ntry):
         xi = np.random.randint(xd)
         yi = np.random.randint(yd)
         num += abs(distances[xi, yi] - np.dot(x[xi], y[yi]))
@@ -58,6 +50,8 @@ for d in 3, 4, 12, 36, 64:
 
 
 print('Running L2sqr test..')
+# sparse verification
+ntry = 100
 for d in 3, 4, 12, 36, 64:
 
     x = faiss.rand(xd * d).reshape(xd, d)
@@ -73,10 +67,8 @@ for d in 3, 4, 12, 36, 64:
                             d, yd)
     t1 = time.time()
 
-    # sparse verification
-    ntry = 100
     num, denom = 0, 0
-    for t in range(ntry):
+    for _ in range(ntry):
         xi = np.random.randint(xd)
         yi = np.random.randint(yd)
         num += abs(distances[xi, yi] - np.sum((x[xi] - y[yi]) ** 2))

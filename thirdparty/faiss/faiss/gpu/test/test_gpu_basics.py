@@ -304,15 +304,15 @@ class TestAllPairwiseDistance(unittest.TestCase):
             faiss.METRIC_JensenShannon
         ]
 
+        d = 33
+        k = 500
+
+        nq = 20
+
         for metric in metrics:
             print(metric)
-            d = 33
-            k = 500
-
             # all pairwise distance should be the same as nb = k
             nb = k
-            nq = 20
-
             xs = make_t(nb, d)
             qs = make_t(nq, d)
 

@@ -8,13 +8,19 @@ import hnswlib
 
 class RandomSelfTestCase(unittest.TestCase):
     def testRandomSelf(self):
+        dim = 16
+        num_elements = 10000
+
+        # Serializing and deleting the index.
+        # We need the part to check that serialization is working properly.
+
+        index_path = 'first_half.bin'
+        # Checking saving/loading index with elements marked as deleted
+        del_index_path = "with_deleted.bin"
         for idx in range(2):
             print("\n**** Index save-load test ****\n")
 
             np.random.seed(idx)
-            dim = 16
-            num_elements = 10000
-
             # Generating sample data
             data = np.float32(np.random.random((num_elements, dim)))
 
@@ -56,11 +62,7 @@ class RandomSelfTestCase(unittest.TestCase):
             diff_with_gt_labels=np.mean(np.abs(data1-items))
             self.assertAlmostEqual(diff_with_gt_labels, 0, delta=1e-4)
 
-            # Serializing and deleting the index.
-            # We need the part to check that serialization is working properly.
-
-            index_path = 'first_half.bin'
-            print("Saving index to '%s'" % index_path)
+            print(f"Saving index to '{index_path}'")
             p.save_index(index_path)
             print("Saved. Deleting...")
             del p
@@ -110,8 +112,6 @@ class RandomSelfTestCase(unittest.TestCase):
                         self.assertTrue(False)
             print("All the data in data1 are removed")
 
-            # Checking saving/loading index with elements marked as deleted
-            del_index_path = "with_deleted.bin"
             p.save_index(del_index_path)
             p = hnswlib.Index(space='l2', dim=dim)
             p.load_index(del_index_path)

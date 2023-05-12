@@ -275,11 +275,7 @@ class TestHistograms(unittest.TestCase):
                 self.do_test_bounded(nbin, n, shift, minv, rspan, seed=123 + run)
             return
 
-        if rspan is None:
-            rmin, rmax = 0, nbin * 6
-        else:
-            rmin, rmax = rspan
-
+        rmin, rmax = (0, nbin * 6) if rspan is None else rspan
         rs = np.random.RandomState(seed)
         tab = rs.randint(rmin, rmax, size=n).astype('uint16')
         bc = np.bincount(tab, minlength=65536)
